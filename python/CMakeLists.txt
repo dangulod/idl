@@ -10,3 +10,5 @@ target_link_libraries(weights IDL::Core)
 
 target_compile_definitions(weights
                            PRIVATE VERSION_INFO=${IDL_VERSION})
+
+set_target_properties(weights PROPERTIES LIBRARY_OUTPUT_DIRECTORY "idlpy")

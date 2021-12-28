@@ -9,6 +9,6 @@ PYBIND11_MODULE(weights, m) {
         .def("get_rating", &idl::WeightsDimension::get_rating)
         .def("get_region", &idl::WeightsDimension::get_region)
         .def("get_sector", &idl::WeightsDimension::get_sector)
-        .def("to_string", &idl::WeightsDimension::get_sector)
-        .def("from_string", &idl::WeightsDimension::get_sector);
+        .def("to_string", &idl::WeightsDimension::to_string)
+        .def_static("from_string", &idl::WeightsDimension::from_string);
 }
