@@ -11,10 +11,16 @@ namespace idl
 {
     class Weights: public arma::vec
     {
+        double m_R2, m_idiosyncratic;
     public:
-        using arma::vec::vec;
+        Weights(std::vector<double> vec);
+        Weights(arma::vec vec);
+        Weights(std::initializer_list<double> vec);
 
         bool operator ==(const Weights &rhs) const;
+
+        double get_R2();
+        double get_idiosyncratic();
 
         pt::ptree to_ptree();
         static Weights from_ptree(pt::ptree & value);

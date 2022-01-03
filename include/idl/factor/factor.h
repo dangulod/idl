@@ -37,9 +37,9 @@ namespace idl
         std::map<WeightsDimension, std::shared_ptr<Weights>>::const_iterator end() const;
 
         size_t size() const;
+        size_t get_number_of_factors() const;
 
         std::shared_ptr<Weights> operator[](const WeightsDimension & value);
-        std::map<WeightsDimension, std::shared_ptr<Weights>>::const_iterator find(const WeightsDimension & value);
 
         WeightsDimension get_default() const;
 

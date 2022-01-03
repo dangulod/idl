@@ -10,10 +10,12 @@ namespace idl
         this->m_counterparty.push_back(value);
     }
 
+    /*
     void Portfolio::operator+(Counterparty && value)
     {
         this->m_counterparty.push_back(std::move(value));
     }
+    */
 
     pt::ptree Portfolio::to_ptree()
     {
@@ -43,7 +45,8 @@ namespace idl
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("counterparties"))
         {
             pt::ptree counterparty = ii.second;
-            output + Counterparty::from_ptree(counterparty);
+            Counterparty cpty = Counterparty::from_ptree(counterparty);
+            output + cpty;
         }
 
         return output;
@@ -84,6 +87,11 @@ namespace idl
         return this->m_counterparty.size();
     }
 
+    size_t Portfolio::get_number_of_factors()
+    {
+        return this->get_factor().get_number_of_factors();
+    }
+
     void Portfolio::to_json(const std::string file)
     {
         pt::write_json(file, this->to_ptree());
@@ -97,8 +105,37 @@ namespace idl
         return Portfolio::from_ptree(ptree);
     }
 
-    Factor & Portfolio::get_factor()
+    Factor & Portfolio::get_factor() 
     {
         return this->m_factor;
     }
+
+    void Portfolio::v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    {
+        while (id < n)
+        {
+            r->row(id) = distributions::normal::random_v(this->get_number_of_factors(), seed).t();
+            id += n_threads;
+        }
+    }
+
+    arma::mat Portfolio::get_scenarios(size_t n, size_t seed, size_t n_threads)
+    {
+        arma::mat rand = arma::zeros(n, this->get_number_of_factors());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_rand, this, &rand, n, seed, it_thread, n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return rand;
+    }
+
 }

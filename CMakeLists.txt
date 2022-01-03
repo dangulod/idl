@@ -112,5 +112,5 @@ if(BUILD_IDL_BENCHMARK)
 endif()
 
 if (BUILD_IDLPY)
-    add_subdirectory(python)
+    add_subdirectory(idlpy)
 endif()

@@ -129,7 +129,7 @@ setup(
     author_email="david.duque@citi.com",
     description="Incremental Default Losses (IDL) Python Wrapper",
     long_description="",
-    ext_modules=[CMakeExtension("weights")],
+    ext_modules=[CMakeExtension("idlpy._idlpy")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},

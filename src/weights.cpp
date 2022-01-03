@@ -2,6 +2,45 @@
 
 namespace idl
 {
+    Weights::Weights(std::vector<double> vec) :
+        arma::vec(vec)
+    {
+        this->m_R2 = arma::accu(arma::pow(*this, 2));
+        
+        if (this->get_R2() > 1) 
+        {
+            throw std::invalid_argument("Invalid Weights: R2 greater than 1");
+        }
+
+        this->m_idiosyncratic = sqrt(1 - this->get_R2());
+    }
+
+    Weights::Weights(arma::vec vec) :
+        arma::vec(vec)
+    {
+        this->m_R2 = arma::accu(arma::pow(*this, 2));
+        
+        if (this->get_R2() > 1) 
+        {
+            throw std::invalid_argument("Invalid Weights: R2 greater than 1");
+        }
+
+        this->m_idiosyncratic = sqrt(1 - this->get_R2());
+    }
+
+    Weights::Weights(std::initializer_list<double> vec):
+        arma::vec(vec)
+    {
+        this->m_R2 = arma::accu(arma::pow(*this, 2));
+        
+        if (this->get_R2() > 1) 
+        {
+            throw std::invalid_argument("Invalid Weights: R2 greater than 1");
+        }
+
+        this->m_idiosyncratic = sqrt(1 - this->get_R2());
+    }
+    
     bool Weights::operator==(const Weights &rhs) const
     {
         if (this->size() != rhs.size()) return false;
@@ -17,6 +56,16 @@ namespace idl
         }
 
         return true;
+    }
+
+    double Weights::get_R2()
+    {
+        return this->m_R2;
+    }
+    
+    double Weights::get_idiosyncratic()
+    {
+        return this->m_idiosyncratic;
     }
 
     pt::ptree Weights::to_ptree()
@@ -36,7 +85,7 @@ namespace idl
 
     Weights Weights::from_ptree(pt::ptree & value)
     {
-        Weights w(value.get_child("").size());
+        arma::vec w(value.get_child("").size());
         auto it_w = w.begin();
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child(""))
@@ -45,7 +94,7 @@ namespace idl
             it_w++;
         }
 
-        return w;
+        return Weights(w);
     }
     
 } // namespace idl

@@ -29,6 +29,14 @@ namespace idl
     void Factor::add(const WeightsDimension dimension,
                      const Weights value)
     {
+        if (this->size() != 0)
+        {
+            if (this->get_number_of_factors() != value.size())
+            {
+                throw std::invalid_argument("(Factor::add) Weights must have the same number of factors");
+            }
+        }
+
         auto success = this->m_weights.insert(std::make_pair(dimension, std::make_shared<Weights>(value)));
 
         if (!success.second)
@@ -72,14 +80,21 @@ namespace idl
         return this->m_weights.size();
     }
 
-    std::shared_ptr<Weights> Factor::operator[](const WeightsDimension & value)
+    size_t Factor::get_number_of_factors() const
     {
-        return this->m_weights[value];
+        return this->begin()->second->size();
     }
 
-    std::map<WeightsDimension, std::shared_ptr<Weights>>::const_iterator Factor::find(const WeightsDimension & value)
+    std::shared_ptr<Weights> Factor::operator[](const WeightsDimension & value)
     {
-        return this->find(value);
+        auto output = this->m_weights.find(value);
+
+        if (output == this->end())
+        {
+            throw std::out_of_range("(Factor class) key does not exists");
+        }
+
+        return output->second;
     }
 
     WeightsDimension Factor::get_default() const

@@ -3,9 +3,11 @@
 
 #include <idl/factor/factor.h>
 #include <idl/portfolio.h>
+#include <idl/distributions/normal.h>
+#include <idl/distributions/beta.h>
 
-//! \namespace Quant namespace for Quant classes and functions
-namespace Quant
+//! \namespace idl namespace for idl classes and functions
+namespace idl
 {
     
 }
