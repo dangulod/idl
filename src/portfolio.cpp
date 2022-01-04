@@ -114,7 +114,7 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = distributions::normal::random_v(this->get_number_of_factors(), seed).t();
+            r->row(id) = distributions::normal::random_v(this->get_number_of_factors(), seed + id).t();
             id += n_threads;
         }
     }
