@@ -10,12 +10,15 @@ namespace idl
         this->m_counterparty.push_back(value);
     }
 
-    /*
     void Portfolio::operator+(Counterparty && value)
     {
         this->m_counterparty.push_back(std::move(value));
     }
-    */
+
+    Counterparty & Portfolio::operator[](const size_t index)
+    {
+        return this->m_counterparty.at(index);
+    }
 
     pt::ptree Portfolio::to_ptree()
     {
@@ -45,8 +48,7 @@ namespace idl
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("counterparties"))
         {
             pt::ptree counterparty = ii.second;
-            Counterparty cpty = Counterparty::from_ptree(counterparty);
-            output + cpty;
+            output + Counterparty::from_ptree(counterparty);
         }
 
         return output;

@@ -27,8 +27,9 @@ namespace idl
         ~Portfolio() = default;
 
         void operator+(Counterparty & value);
-        // void operator+(Counterparty && value);
+        void operator+(Counterparty && value);
 
+        Counterparty & operator[](const size_t index);
         // bool operator ==(const Portfolio &rhs) const;
 
         std::vector<Counterparty>::iterator begin();

@@ -1,4 +1,4 @@
-#include <idl/default/rating.h>
+#include <idl/default/ratingPD.h>
 
 namespace idl
 {
@@ -46,11 +46,13 @@ namespace idl
     void RatingPD::add(const unsigned int rating,
                        const double default_probability)
     {
+        idl::utils::isProbability(default_probability);
+        
         auto success = this->m_ratings.insert(std::make_pair(rating, default_probability));
 
         if (!success.second)
         {
-            throw std::invalid_argument("(RatingPD::add) Key alredy exists in the RatingPD object");
+            throw std::invalid_argument("(RatingPD::add) Key already exists in the RatingPD object");
         }
     }
 
@@ -89,14 +91,13 @@ namespace idl
         pt::ptree::const_assoc_iterator child = value.find("ratings");
 
         if (child == value.not_found()) return output;
-        /*
+        
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("ratings"))
         {
-            pt::ptree weight = ii.second;
-            output.add(atoi(ii.first), 
-                       ii.second.get_value<double());
+            output.add(atoi(ii.first.c_str()), 
+                       ii.second.get_value<double>());
         }
-        */
+        
         return output;
     }
 

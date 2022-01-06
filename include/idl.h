@@ -2,6 +2,7 @@
 #define IDL_INCLUDES
 
 #include <idl/factor/factor.h>
+#include <idl/default/ratingPD.h>
 #include <idl/portfolio.h>
 #include <idl/distributions/normal.h>
 #include <idl/distributions/beta.h>

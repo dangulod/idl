@@ -5,6 +5,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 
+#include <idl/utils/stats.h>
+
 namespace pt = boost::property_tree;
 
 namespace idl
