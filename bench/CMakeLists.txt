@@ -10,4 +10,5 @@ macro(add_IDL_bench _BENCH_NAME)
     set_property(TARGET ${_BENCH_NAME}_bench PROPERTY FOLDER "bench")
 endmacro()
 
+add_IDL_bench(scenarios)
 add_IDL_bench(simulation)
