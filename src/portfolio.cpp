@@ -3,7 +3,7 @@
 namespace idl
 {
     Portfolio::Portfolio(Factor factor) :
-        m_factor(factor) { }
+        m_dist_scenarios(idl::distributions::Normal(0, 1)), m_factor(factor) { }
 
     void Portfolio::operator+(Counterparty & value)
     {
@@ -116,7 +116,7 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = distributions::normal::random_v(this->get_number_of_factors(), seed + id).t();
+            r->row(id) = this->m_dist_scenarios(this->get_number_of_factors(), seed + id).t();
             id += n_threads;
         }
     }
