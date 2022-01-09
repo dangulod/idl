@@ -12,6 +12,7 @@ namespace idl
     class Portfolio
     {
     private:
+        idl::distributions::Normal m_dist_scenarios;
         Factor m_factor;
         std::vector<Counterparty> m_counterparty;
 

@@ -26,6 +26,10 @@ if(BUILD_IDL_TESTS)
 IDL_option(BUILD_IDL_COVERAGE "Set to ON to build IDL coverage" ON)
 endif()
 
+if (BUILD_IDLPY AND NOT DEFINED IDLPY_VERSION)
+    set(IDLPY_VERSION "dev")
+endif()
+
 if(BUILD_IDL_TESTS AND BUILD_IDL_COVERAGE)
   include( cmake_aux/codeCoverage.cmake )
   SET(CMAKE_CXX_FLAGS "-g -O0 --coverage -fprofile-arcs -ftest-coverage")

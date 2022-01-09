@@ -13,4 +13,4 @@ pybind11_add_module(_idlpy ${PYMODEL_SOURCES})
 target_link_libraries(_idlpy PRIVATE IDL::Core)
 
 target_compile_definitions(_idlpy
-                           PRIVATE VERSION_INFO=${IDL_VERSION})
+                           PRIVATE IDLPY_VERSION=${IDLPY_VERSION})

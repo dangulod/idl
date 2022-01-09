@@ -4,112 +4,77 @@ namespace idl
 {
     namespace distributions
     {
-        namespace beta
+        Beta::Beta(double shape1, double shape2, double a, double b) : 
+            m_shape1(shape1), m_shape2(shape2), m_a(a), m_b(b) 
+        { 
+            if (shape1 <= 0 | std::isfinite(shape1) != true) 
+                throw std::invalid_argument("(Beta) Shape1 is not finite or < 0");
+            if (shape2 <= 0 | std::isfinite(shape2) != true) 
+                throw std::invalid_argument("(Beta) Shape2 is not finite or < 0");
+            if (std::isfinite(a) != true) 
+                throw std::invalid_argument("(Beta) a is not finite");
+            if (std::isfinite(b) != true) 
+                throw std::invalid_argument("(Beta) b is not finite");
+            if (a >= b) 
+                throw std::invalid_argument("(Beta) a must not be greater than b");
+        }
+
+        double Beta::pdf(double x)
         {
-            double quantile(double p, double shape1, double shape2, double a, double b)
-            {
-                utils::isProbability(p);
+            utils::isFinite(x);
 
-                double scale = b - a;
-                return boost::math::ibeta_inv(shape1, shape2, p) * scale + a;
-            }
-            
-            arma::vec quantile(const arma::vec p, double shape1, double shape2, double a, double b)
-            {
-                arma::vec r = p;
+            double scale = m_b - m_a;
+            double t12   = tgamma(m_shape1 + m_shape2);
+            double t1    = tgamma(m_shape1);
+            double t2    = tgamma(m_shape2);
 
-                for (auto & ii: r)
-                {
-                    ii = quantile(ii, shape1, shape2, a, b);
-                }
+            double px;
 
-                return r;
-            }
+            px = (x - m_a) / scale;
 
-            double cdf(double x, double shape1, double shape2, double a, double b)
-            {
-                utils::isFinite(x);
+            px = (t12 * pow(px, m_shape1 - 1) * pow(1 - px, m_shape2 - 1)) / (t1 * t2 * scale);
 
-                double scale = b - a;
+            return px;
+        }
 
-                double dx = (x - a) / scale;
+        double Beta::cdf(double x)
+        {
+            utils::isFinite(x);
 
-                return boost::math::ibeta(shape1, shape2, dx);;
-            }
+            double scale = this->m_b - this->m_a;
 
-            arma::vec cdf(const arma::vec x, double shape1, double shape2, double a, double b)
-            {
-                arma::vec r = x;
+            double dx = (x - this->m_a) / scale;
 
-                for (auto & ii: r)
-                {
-                    ii = cdf(ii, shape1, shape2, a, b);
-                }
+            return boost::math::ibeta(this->m_shape1, this->m_shape2, dx);
+        }
 
-                return r;
-            }
+        double Beta::quantile(double p)
+        {
+            utils::isProbability(p);
 
-            double pdf(double x, double shape1, double shape2, double a, double b)
-            {
-                utils::isFinite(x);
+            double scale = this->m_b - this->m_a;
+            return boost::math::ibeta_inv(this->m_shape1, this->m_shape2, p) * scale + this->m_a;
+        }
 
-                double scale = b - a;
-                double t12   = tgamma(shape1 + shape2);
-                double t1    = tgamma(shape1);
-                double t2    = tgamma(shape2);
+        double Beta::get_shape1() const
+        {
+            return this->m_shape1;
+        }
 
-                double px;
+        double Beta::get_shape2() const
+        {
+            return this->m_shape2;
+        }
 
-                px = (x - a) / scale;
+        double Beta::get_a() const
+        {
+            return this->m_a;
+        }
 
-                px = (t12 * pow(px, shape1 - 1) * pow(1 - px, shape2 - 1)) / (t1 * t2 * scale);
+        double Beta::get_b() const
+        {
+            return this->m_b;
+        }
 
-                return px;
-            }
-
-            arma::vec pdf(const arma::vec x, double shape1, double shape2, double a, double b)
-            {
-                arma::vec r = x;
-
-                for (auto & ii: r)
-                {
-                    ii = pdf(ii, shape1, shape2, a, b);
-                }
-
-                return r;
-            }
-
-            double random_s(unsigned long seed, double shape1, double shape2, double a, double b)
-            {
-                std::mt19937_64 generator;
-                generator.seed(seed);
-
-                double numerator = generator();
-                double divisor = static_cast<double>(generator.max());
-                double p = numerator / divisor;
-
-                return quantile(p, shape1, shape2, a, b);
-            }
-
-            arma::vec random_v(size_t n, unsigned long seed, double shape1, double shape2, double a, double b)
-            {
-                arma::vec ale(n);
-                double numerator, divisor, p;
-
-                std::mt19937 generator;
-                generator.seed(seed);
-
-                for (size_t ii = 0; ii < n; ii++)
-                {
-                    numerator = generator();
-                    divisor = static_cast<double>(generator.max());
-                    p = numerator / divisor;
-
-                    ale.at(ii) = quantile(p, shape1, shape2, a, b);
-                }
-
-                return ale;
-            }
-        } // namespace beta
     } // namespace distributions
 } // namespace idl

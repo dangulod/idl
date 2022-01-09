@@ -3,23 +3,31 @@
 
 #include <armadillo>
 #include <idl/utils/stats.h>
+#include <idl/distributions/distribution.hpp>
 #include <boost/math/special_functions/beta.hpp>
 
 namespace idl
 {
     namespace distributions
     {
-        namespace beta
+        class Beta: public Distribution
         {
-            double quantile(double p, double shape1, double shape2, double a = 0, double b = 1);
-            arma::vec quantile(const arma::vec p, double shape1, double shape2, double a = 0, double b = 1);
-            double cdf(double x, double shape1, double shape2, double a = 0, double b = 1);
-            arma::vec cdf(const arma::vec x, double shape1, double shape2, double a = 0, double b = 1);
-            double pdf(double x, double shape1, double shape2, double a = 0, double b = 1);
-            arma::vec pdf(const arma::vec x, double shape1, double shape2, double a = 0, double b = 1);
-            double random_s(unsigned long seed, double shape1, double shape2, double a = 0, double b = 1);
-            arma::vec random_v(size_t n, unsigned long seed, double shape1, double shape2, double a = 0, double b = 1);
-        } // namespace beta
+        private:
+            double m_shape1, m_shape2, m_a, m_b;
+        public:
+            Beta() = delete;
+            Beta(double shape1, double shape2, double a, double b);
+            ~Beta() = default;
+
+            double cdf(double x);
+            double pdf(double x);
+            double quantile(double p);
+
+            double get_shape1() const;
+            double get_shape2() const;
+            double get_a() const;
+            double get_b() const;
+        };
     } // namespace distributions
 } // namespace idl
 
