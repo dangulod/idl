@@ -1,4 +1,4 @@
-#include <idl/default/ratingPD.h>
+#include <idl/risk_params/ratingPD.h>
 
 namespace idl
 {
@@ -50,7 +50,7 @@ namespace idl
         
         auto success = this->m_ratings.insert(std::make_pair(rating, default_probability));
 
-        if (!success.second)
+        if (!success.second & ((*this)[rating] != default_probability))
         {
             throw std::invalid_argument("(RatingPD::add) Key already exists in the RatingPD object");
         }

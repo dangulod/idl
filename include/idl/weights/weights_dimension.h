@@ -2,9 +2,9 @@
 #define WEIGHTS_DIMENSION_H__
 
 #include <vector>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 namespace pt = boost::property_tree;
 

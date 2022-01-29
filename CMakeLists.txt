@@ -41,6 +41,7 @@ file(GLOB MODEL_SOURCES
     )
 
 add_library(IDL SHARED ${MODEL_SOURCES})
+target_link_libraries(IDL armadillo)
 add_library(IDL::Core ALIAS IDL)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 

@@ -18,6 +18,9 @@ namespace idl
         Weights(std::initializer_list<double> vec);
 
         bool operator ==(const Weights &rhs) const;
+        bool operator !=(const Weights &rhs) const;
+
+        arma::vec operator%(const arma::vec & rhs) const;
 
         double get_R2();
         double get_idiosyncratic();

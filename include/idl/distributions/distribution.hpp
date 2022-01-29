@@ -2,8 +2,13 @@
 #define DISTRIBUTIONS_HPP__
 
 #include <armadillo>
-#include <idl/utils/stats.h>
+
+#include <boost/property_tree/ptree.hpp>
 #include <boost/math/special_functions/erf.hpp>
+
+#include <idl/utils/stats.h>
+
+namespace pt = boost::property_tree;
 
 namespace idl
 {
@@ -33,6 +38,17 @@ namespace idl
             {
                 std::mt19937_64 generator;
                 generator.seed(seed);
+
+                double numerator = generator();
+                double divisor = generator.max();
+                double p = numerator / divisor;
+
+                return this->quantile(p);
+            }
+
+            double operator()()
+            {
+                std::mt19937_64 generator;
 
                 double numerator = generator();
                 double divisor = generator.max();

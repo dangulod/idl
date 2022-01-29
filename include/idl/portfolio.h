@@ -1,10 +1,10 @@
 #ifndef PORFTOLIO_H__
 #define PORFTOLIO_H__
 
-#include <vector>
 #include <thread>
 #include <idl/factor/factor.h>
-#include <idl/counterparty.h>
+#include <idl/risk_params/idlParams.h>
+#include <idl/positions/position.h>
 #include <idl/distributions/normal.h>
 
 namespace idl
@@ -14,31 +14,37 @@ namespace idl
     private:
         idl::distributions::Normal m_dist_scenarios;
         Factor m_factor;
-        std::vector<Counterparty> m_counterparty;
+        IDLParams m_idlparams;
+        std::map<std::string, std::shared_ptr<Position>> m_position;
+
+        std::map<std::string, std::shared_ptr<Weights>> m_weights;
+        std::map<std::string, std::shared_ptr<distributions::Beta>> m_recoveries;
+        std::map<std::string, double> m_pds;
 
         void v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
+        void v_cwi (arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
 
     public:
         Portfolio() = delete;
-        Portfolio(Factor factor);
+        Portfolio(Factor factor, IDLParams idlparams);
         Portfolio(const Portfolio & value) = delete;
         Portfolio(Portfolio && value) = default;
         Portfolio& operator=(const Portfolio & value) = delete;
         Portfolio& operator=(Portfolio && value) = default;
         ~Portfolio() = default;
 
-        void operator+(Counterparty & value);
-        void operator+(Counterparty && value);
+        void add_position(std::string id, Position & value);
+        void add_position(std::string id, Position && value);
 
-        Counterparty & operator[](const size_t index);
+        std::shared_ptr<Position> & operator[](const std::string id);
         // bool operator ==(const Portfolio &rhs) const;
 
-        std::vector<Counterparty>::iterator begin();
-        std::vector<Counterparty>::iterator end();
-        std::vector<Counterparty>::const_iterator cbegin() const;
-        std::vector<Counterparty>::const_iterator cend() const;
-        std::vector<Counterparty>::const_iterator begin() const;
-        std::vector<Counterparty>::const_iterator end() const;
+        std::map<std::string, std::shared_ptr<Position>>::iterator begin();
+        std::map<std::string, std::shared_ptr<Position>>::iterator end();
+        std::map<std::string, std::shared_ptr<Position>>::const_iterator cbegin() const;
+        std::map<std::string, std::shared_ptr<Position>>::const_iterator cend() const;
+        std::map<std::string, std::shared_ptr<Position>>::const_iterator begin() const;
+        std::map<std::string, std::shared_ptr<Position>>::const_iterator end() const;
 
         size_t size() const;
         size_t get_number_of_factors();
@@ -50,8 +56,15 @@ namespace idl
         static Portfolio from_json(const std::string file);
 
         Factor & get_factor();
+        IDLParams & get_IDLParams();
+
+        arma::mat correlation_sructure();
 
         arma::mat get_scenarios(size_t n, size_t seed, size_t n_threads = std::thread::hardware_concurrency());
+
+        arma::vec getCWI(arma::vec f, size_t idio_id);
+        arma::vec getCWI(size_t seed, size_t idio_id);
+        arma::mat get_CWIs(size_t n, size_t seed, size_t n_threads = std::thread::hardware_concurrency());
     };
     
 } // namespace idl

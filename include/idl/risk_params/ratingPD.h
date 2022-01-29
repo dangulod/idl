@@ -20,6 +20,7 @@ namespace idl
         ~RatingPD() = default;
 
         bool operator ==(const RatingPD &rhs) const;
+        bool operator !=(const RatingPD &rhs) const;
 
         size_t size() const;
 

@@ -2,7 +2,7 @@
 #define IDL_INCLUDES
 
 #include <idl/factor/factor.h>
-#include <idl/default/ratingPD.h>
+#include <idl/risk_params/ratingPD.h>
 #include <idl/portfolio.h>
 #include <idl/distributions/distributions.h>
 

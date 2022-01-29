@@ -10,8 +10,8 @@ std::string double_to_string(double value);
 
 void ex_factor(py::module_ &m) {
     py::class_<idl::Factor>(m, "Factor")
-        .def(py::init<const unsigned &, const unsigned &, const unsigned &>())
-        .def(py::init<idl::WeightsDimension &>())
+        .def(py::init<const unsigned &, const unsigned &, const unsigned &, idl::Weights>())
+        .def(py::init<idl::WeightsDimension &, idl::Weights>())
         .def_property_readonly("number_of_factors", &idl::Factor::get_number_of_factors)
         .def_property_readonly("default", &idl::Factor::get_default)
         .def("add", &idl::Factor::add)
@@ -50,11 +50,24 @@ void ex_factor(py::module_ &m) {
                 throw std::invalid_argument("(Factor class) Index size must be 3");
             }
 
-            idl::WeightsDimension ii(py::cast<size_t>(index[0]), 
-                                     py::cast<size_t>(index[1]), 
-                                     py::cast<size_t>(index[2]));
+            idl::WeightsDimension ii(py::cast<unsigned int>(index[0]), 
+                                     py::cast<unsigned int>(index[1]), 
+                                     py::cast<unsigned int>(index[2]));
 
-            return new idl::Weights(*object[ii].get());
+            return idl::Weights(*object[ii].get());
+        })
+        .def("__call__", [](idl::Factor & object, const unsigned int rating, 
+                            const unsigned int region, const unsigned int sector)
+        {
+            idl::WeightsDimension ii(rating, 
+                                     region, 
+                                     sector);
+
+            return idl::Weights(*object.at(ii).get());
+        })
+        .def("__call__", [](idl::Factor & object, idl::WeightsDimension & index)
+        {
+            return idl::Weights(*object.at(index).get());
         })
         .def("__eq__", &idl::Factor::operator==)
         .def("__repr__", [](const idl::Factor & object)
@@ -118,6 +131,7 @@ void ex_factor(py::module_ &m) {
         }))
         .def_property_readonly("idiosyncratic", &idl::Weights::get_idiosyncratic)
         .def_property_readonly("R2", &idl::Weights::get_R2)
+        .def("__eq__", &idl::Weights::operator==)
         .def("__getitem__", [](const idl::Weights & object, size_t ii)
         {
             if (ii >= object.size())
