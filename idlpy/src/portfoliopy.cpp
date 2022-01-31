@@ -42,6 +42,8 @@ void ex_portfolio(py::module_ &m) {
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
         .def("get_CWIs", &idl::Portfolio::get_CWIs, 
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("marginal_loss", py::overload_cast<size_t, size_t, size_t>(&idl::Portfolio::marginal_loss), 
+            py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
         ;
     py::class_<idl::Position>(m, "Position")
         .def(py::init<const double &, const double &, const unsigned &, const unsigned &, const unsigned &, size_t &>())

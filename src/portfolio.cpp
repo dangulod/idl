@@ -205,17 +205,14 @@ namespace idl
         arma::vec output(this->size());
 
         auto it_position = this->begin();
-        auto it_weights = this->m_weights.begin();
-        auto it_output = output.begin();
+        auto it_weights  = this->m_weights.begin();
+        auto it_output   = output.begin();
 
         while (it_weights != this->m_weights.end())
         {
-            //Crear clase contenedora -> IDLPosition + Weights + PD + Recovery
             (*it_output) = arma::accu((*it_weights->second.get()) % f) 
                          + (it_weights->second->get_idiosyncratic() 
                          * this->m_dist_scenarios(idio_id + it_position->second->get_idio_seed()));
-            // Generar aleatorios idio
-            //(*it_output) =+ it_weights->second->get_idiosyncratic();
             it_position++;
             it_weights++;
             it_output++;
@@ -239,7 +236,6 @@ namespace idl
         }
     }
 
-
     arma::mat Portfolio::get_CWIs(size_t n, size_t seed, size_t n_threads)
     {
         arma::mat cwi = arma::zeros(n, this->size());
@@ -257,5 +253,59 @@ namespace idl
         }
 
         return cwi;
+    }
+    
+    arma::vec Portfolio::marginal_loss(arma::vec f, size_t idio_id)
+    {
+        arma::vec output(this->size());
+
+        auto it_position = this->begin();
+        auto it_weights  = this->m_weights.begin();
+        auto it_output   = output.begin();
+        auto it_pd       = this->m_pds.begin();
+
+        while (it_weights != this->m_weights.end())
+        {
+            double systematic = arma::accu((*it_weights->second.get()) % f);
+            double cwi = systematic 
+                       + (it_weights->second->get_idiosyncratic()
+                       * this->m_dist_scenarios(idio_id + it_position->second->get_idio_seed()));
+            *it_output = (cwi > this->m_dist_scenarios.cdf(it_pd->second)) ? it_position->second->get_jtd() : 0;
+            it_position++;
+            it_weights++;
+            it_output++;
+            it_pd++;
+        }
+
+        return output;
+    }
+
+    void Portfolio::v_marginal_loss(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    {
+        while (id < n)
+        {
+            arma::vec f = this->m_dist_scenarios(this->get_number_of_factors(), seed);
+            r->row(id) = this->marginal_loss(f, id).t();
+            id += n_threads;
+        }
+    }
+
+    arma::mat Portfolio::marginal_loss(size_t n, size_t seed, size_t n_threads)
+    {
+        arma::mat loss = arma::zeros(n, this->size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_marginal_loss, this, &loss, n, seed, it_thread, n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
     }
 }

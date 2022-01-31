@@ -23,6 +23,7 @@ namespace idl
 
         void v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
         void v_cwi (arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
+        void v_marginal_loss(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
 
     public:
         Portfolio() = delete;
@@ -65,6 +66,9 @@ namespace idl
         arma::vec getCWI(arma::vec f, size_t idio_id);
         arma::vec getCWI(size_t seed, size_t idio_id);
         arma::mat get_CWIs(size_t n, size_t seed, size_t n_threads = std::thread::hardware_concurrency());
+
+        arma::vec marginal_loss(arma::vec f, size_t idio_id);
+        arma::mat marginal_loss(size_t n, size_t seed, size_t n_threads = std::thread::hardware_concurrency());
     };
     
 } // namespace idl
