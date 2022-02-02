@@ -39,40 +39,44 @@ namespace idl
                 std::mt19937_64 generator;
                 generator.seed(seed);
 
-                double numerator = generator();
-                double divisor = generator.max();
-                double p = numerator / divisor;
+                return (*this)(generator);
+            }
 
-                return this->quantile(p);
+            template<typename engine>
+            double operator()(engine e, unsigned long seed)
+            {
+                e.seed(seed);
+
+                return (*this)(e);
             }
 
             double operator()()
             {
                 std::mt19937_64 generator;
 
-                double numerator = generator();
-                double divisor = generator.max();
-                double p = numerator / divisor;
-
-                return this->quantile(p);
+                return (*this)(generator);
             }
 
             arma::vec operator()(size_t n, unsigned long seed)
             {
-                arma::vec rnd(n);
+                std::mt19937_64 generator;
 
+                return (*this)(generator, n, seed);
+            }
+
+            template<typename engine>
+            arma::vec operator()(engine e, size_t n, unsigned long seed)
+            {
                 std::mt19937_64 generator;
                 generator.seed(seed);
+                
+                arma::vec rnd(n);
 
                 auto it_rnd = rnd.begin();
                 
                 while (it_rnd != rnd.end())
                 {
-                    double numerator = generator();
-                    double divisor = generator.max();
-                    double p = numerator / divisor;
-
-                    *it_rnd = this->quantile(p);
+                    *it_rnd = (*this)(generator);
                     it_rnd++;
                 }
 
