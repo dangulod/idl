@@ -29,6 +29,12 @@ void ex_portfolio(py::module_ &m) {
         {
             object.add_position(id, value);
         })
+        .def("add_position", [](idl::Portfolio & object, 
+                           std::string id,
+                           idl::Position & value)
+        {
+            object.add_position(id, value);
+        })
         .def("__repr__", [](const idl::Portfolio & object)
         {
             std::string str("Portfolio class with ");

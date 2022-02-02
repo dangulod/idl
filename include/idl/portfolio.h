@@ -25,6 +25,20 @@ namespace idl
         void v_cwi (arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
         void v_marginal_loss(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
 
+        std::mt19937_64 m_generator_factors;
+        std::mersenne_twister_engine<uint_fast64_t,
+                                    64,312,156,31,0xb5026f5aa96619e9,
+                                    39,0x5555555555555555,
+                                    17,0x71d67fffeda60000,
+                                    36,0xfff7eee000000000,
+                                    43,6364136223846793005> m_generator_idiosyncratic;
+        std::mersenne_twister_engine<uint_fast64_t,
+                                    64,312,156,31,0xb5026f5aa96619e9,
+                                    39,0x5555555555555555,
+                                    17,0x71d67fffeda60000,
+                                    31,0xfff7eee000000000,
+                                    43,6364136223846793005> m_generator_recovery;
+
     public:
         Portfolio() = delete;
         Portfolio(Factor factor, IDLParams idlparams);

@@ -176,7 +176,9 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = this->m_dist_scenarios(this->get_number_of_factors(), seed + id).t();
+            r->row(id) = this->m_dist_scenarios(m_generator_factors, 
+                                                this->get_number_of_factors(), 
+                                                seed + id).t();
             id += n_threads;
         }
     }
@@ -212,7 +214,8 @@ namespace idl
         {
             (*it_output) = arma::accu((*it_weights->second.get()) % f) 
                          + (it_weights->second->get_idiosyncratic() 
-                         * this->m_dist_scenarios(idio_id + it_position->second->get_idio_seed()));
+                         * this->m_dist_scenarios(m_generator_idiosyncratic, 
+                                                  idio_id + it_position->second->get_idio_seed()));
             it_position++;
             it_weights++;
             it_output++;
@@ -223,7 +226,9 @@ namespace idl
 
     arma::vec Portfolio::getCWI(size_t seed, size_t idio_id)
     {
-        arma::vec f = this->m_dist_scenarios(this->get_number_of_factors(), seed);
+        arma::vec f = this->m_dist_scenarios(m_generator_factors, 
+                                             this->get_number_of_factors(), 
+                                             seed);
         return this->getCWI(f, idio_id);
     }
 
@@ -263,14 +268,18 @@ namespace idl
         auto it_weights  = this->m_weights.begin();
         auto it_output   = output.begin();
         auto it_pd       = this->m_pds.begin();
+        auto it_recovery = this->m_recoveries.begin();
 
         while (it_weights != this->m_weights.end())
         {
             double systematic = arma::accu((*it_weights->second.get()) % f);
             double cwi = systematic 
                        + (it_weights->second->get_idiosyncratic()
-                       * this->m_dist_scenarios(idio_id + it_position->second->get_idio_seed()));
-            *it_output = (cwi > this->m_dist_scenarios.cdf(it_pd->second)) ? it_position->second->get_jtd() : 0;
+                       * this->m_dist_scenarios(m_generator_idiosyncratic, 
+                                                idio_id + it_position->second->get_idio_seed()));
+            *it_output = (cwi > this->m_dist_scenarios.cdf(it_pd->second)) ? 
+                         (*it_recovery->second)(this->m_generator_recovery) 
+                         * it_position->second->get_jtd() : 0;
             it_position++;
             it_weights++;
             it_output++;
@@ -284,7 +293,9 @@ namespace idl
     {
         while (id < n)
         {
-            arma::vec f = this->m_dist_scenarios(this->get_number_of_factors(), seed);
+            arma::vec f = this->m_dist_scenarios(m_generator_factors, 
+                                                 this->get_number_of_factors(), 
+                                                 seed);
             r->row(id) = this->marginal_loss(f, id).t();
             id += n_threads;
         }
