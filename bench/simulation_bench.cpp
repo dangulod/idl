@@ -5,7 +5,7 @@ static void FACTOR_BENCH(benchmark::State& state) {
     
     using namespace idl;
 
-    idl::Factor idl_factor(0, 0, 0);
+    idl::Factor idl_factor(0, 0, 0, {0.1, 0.1, 0.1});
 
     idl_factor.add({1, 0, 0}, {0.1, 0.1, 0.1});
     idl_factor.add({0, 0, 0}, {0.1, 0.1, 0.1});
