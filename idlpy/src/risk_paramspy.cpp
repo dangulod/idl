@@ -22,6 +22,18 @@ void ex_risk_params(py::module_ &m) {
 
             return str;
         })
+        .def("add", [](idl::IDLParams & object,
+                       std::string name, 
+                       idl::distributions::Beta dist)
+        {
+            object.add(name, dist);
+        })
+        .def("add", [](idl::IDLParams & object,
+                       std::string name, 
+                       idl::RatingPD ratingPD)
+        {
+            object.add(name, ratingPD);
+        })
     ;
     py::class_<idl::RatingPD>(m, "RatingPD")
         .def(py::init<>())
