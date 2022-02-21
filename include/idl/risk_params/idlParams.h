@@ -25,7 +25,7 @@ namespace idl
         void add(std::string name, distributions::Beta dist);
 
         std::shared_ptr<distributions::Beta> get_recovery(std::string value);
-        double get_default_probability(std::string value, unsigned int rating);
+        PD get_default_probability(std::string value, unsigned int rating);
 
         pt::ptree to_ptree();
         static IDLParams from_ptree(const pt::ptree & value);

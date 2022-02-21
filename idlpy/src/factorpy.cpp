@@ -9,6 +9,12 @@ namespace py = pybind11;
 std::string double_to_string(double value);
 
 void ex_factor(py::module_ &m) {
+    py::class_<idl::PD>(m, "PD")
+        .def("__repr__", [](const idl::PD & object)
+        {
+            return double_to_string(object.get_pd());
+        })
+    ;
     py::class_<idl::Factor>(m, "Factor")
         .def(py::init<const unsigned &, const unsigned &, const unsigned &, idl::Weights>())
         .def(py::init<idl::WeightsDimension &, idl::Weights>())

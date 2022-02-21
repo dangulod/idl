@@ -6,6 +6,7 @@
 #include <boost/foreach.hpp>
 
 #include <idl/utils/stats.h>
+#include <idl/risk_params/PD.h>
 
 namespace pt = boost::property_tree;
 
@@ -14,7 +15,7 @@ namespace idl
     class RatingPD
     {
     private:
-        std::map<unsigned int, double> m_ratings;
+        std::map<unsigned int, PD> m_ratings;
     public:
         RatingPD() = default;
         ~RatingPD() = default;
@@ -27,14 +28,14 @@ namespace idl
         void add(const unsigned int rating,
                  const double default_probability);
 
-        std::map<unsigned int, double>::iterator begin();
-        std::map<unsigned int, double>::iterator end();
-        std::map<unsigned int, double>::const_iterator cbegin() const;
-        std::map<unsigned int, double>::const_iterator cend() const;
-        std::map<unsigned int, double>::const_iterator begin() const;
-        std::map<unsigned int, double>::const_iterator end() const;
+        std::map<unsigned int, PD>::iterator begin();
+        std::map<unsigned int, PD>::iterator end();
+        std::map<unsigned int, PD>::const_iterator cbegin() const;
+        std::map<unsigned int, PD>::const_iterator cend() const;
+        std::map<unsigned int, PD>::const_iterator begin() const;
+        std::map<unsigned int, PD>::const_iterator end() const;
 
-        double operator[](const unsigned int rating) const;
+        PD operator[](const unsigned int rating) const;
 
         pt::ptree to_ptree();
         static RatingPD from_ptree(const pt::ptree & value);

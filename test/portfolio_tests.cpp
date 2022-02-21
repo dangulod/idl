@@ -47,6 +47,6 @@ TEST(Portfolio, class)
     portfolio.to_json("/tmp/portfolio.json");
 
     idl::Portfolio p = idl::Portfolio::from_json("/tmp/portfolio.json");
-    p.get_CWIs(20, 123456789).print();
-    p.correlation_sructure();
+
+    p.marginal_loss(10, 123456789, 0, 1).print();
 }

@@ -1,24 +1,21 @@
-#include <idl/portfolio.h>
+#include <idl/portfolio/portfolio.h>
 
 namespace idl
 {
     Portfolio::Portfolio(Factor factor, IDLParams idlparams) :
-        m_dist_scenarios(idl::distributions::Normal(0, 1)), m_factor(factor),
-        m_idlparams(idlparams)
+        m_factor(factor), m_idlparams(idlparams)
     { 
         
     }
 
     void Portfolio::add_position(std::string id, Position & value)
     {
+        value.set_PD(this->get_IDLParams().get_default_probability("SOV", 
+                                                                   value.get_rating()));
+        value.set_recovery(this->get_IDLParams().get_recovery("all"));
+        value.set_weights(this->get_factor().at(value.get_weight_dimension()));
+
         auto success = this->m_position.insert(std::make_pair(id, std::make_shared<Position>(value)));
-        this->m_weights.insert(std::make_pair(id, 
-                                              this->get_factor().at(value.get_weight_dimension())));
-        this->m_recoveries.insert(std::make_pair(id, 
-                                                 this->get_IDLParams().get_recovery("all")));
-        this->m_pds.insert(std::make_pair(id, 
-                                          this->get_IDLParams().get_default_probability("SOV", 
-                                                                                        value.get_rating())));
 
         if (!success.second)
         {
@@ -28,15 +25,12 @@ namespace idl
     
     void Portfolio::add_position(std::string id, Position && value)
     {
-        auto success = this->m_position.insert(std::make_pair(id, std::make_shared<Position>(value)));
+        value.set_PD(this->get_IDLParams().get_default_probability("SOV", 
+                                                                   value.get_rating()));
+        value.set_recovery(this->get_IDLParams().get_recovery("all"));
+        value.set_weights(this->get_factor().at(value.get_weight_dimension()));
 
-        this->m_weights.insert(std::make_pair(id, 
-                                              this->get_factor().at(value.get_weight_dimension())));
-        this->m_recoveries.insert(std::make_pair(id, 
-                                                 this->get_IDLParams().get_recovery("all")));
-        this->m_pds.insert(std::make_pair(id, 
-                                          this->get_IDLParams().get_default_probability("SOV", 
-                                                                                        value.get_rating())));
+        auto success = this->m_position.insert(std::make_pair(id, std::make_shared<Position>(value)));
 
         if (!success.second)
         {
@@ -44,7 +38,7 @@ namespace idl
         }
     }
 
-    std::shared_ptr<Position> & Portfolio::operator[](const std::string id)
+    Position & Portfolio::operator[](const std::string id)
     {
         auto output = this->m_position.find(id);
 
@@ -53,7 +47,7 @@ namespace idl
             throw std::out_of_range("(Portfolio[]) key does not exists");
         }
 
-        return output->second;
+        return *output->second.get();
     }
 
     pt::ptree Portfolio::to_ptree()
@@ -67,7 +61,7 @@ namespace idl
 
         for (const auto & ii: *this)
         {
-            counterparties.push_back(std::make_pair(ii.first, ii.second.get()->to_ptree()));
+            counterparties.push_back(std::make_pair(ii.first, ii.second->to_ptree()));
         }
 
         root.add_child("counterparties", counterparties);
@@ -159,9 +153,9 @@ namespace idl
         arma::mat m(this->size(), this->get_number_of_factors());
         size_t kk = 0;
 
-        for (auto &it_weights: this->m_weights)
+        for (auto &it_weights: this->m_position)
         {
-            m.row(kk) = it_weights.second->t();
+            m.row(kk) = it_weights.second->get_weights()->t();
             kk++;
         }
 
@@ -176,9 +170,9 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = this->m_dist_scenarios(m_generator_factors, 
-                                                this->get_number_of_factors(), 
-                                                seed + id).t();
+            r->row(id) = dist_normal(generator::factors, 
+                                     this->get_number_of_factors(), 
+                                     seed + id).t();
             id += n_threads;
         }
     }
@@ -207,17 +201,14 @@ namespace idl
         arma::vec output(this->size());
 
         auto it_position = this->begin();
-        auto it_weights  = this->m_weights.begin();
         auto it_output   = output.begin();
 
-        while (it_weights != this->m_weights.end())
+        while (it_position != this->end())
         {
-            (*it_output) = arma::accu((*it_weights->second.get()) % f) 
-                         + (it_weights->second->get_idiosyncratic() 
-                         * this->m_dist_scenarios(m_generator_idiosyncratic, 
-                                                  idio_id + it_position->second->get_idio_seed()));
+            (*it_output) = it_position->second->get_cwi(f,
+                                                        idio_id,
+                                                        1).at(0);
             it_position++;
-            it_weights++;
             it_output++;
         }
 
@@ -226,9 +217,9 @@ namespace idl
 
     arma::vec Portfolio::getCWI(size_t seed, size_t idio_id)
     {
-        arma::vec f = this->m_dist_scenarios(m_generator_factors, 
-                                             this->get_number_of_factors(), 
-                                             seed);
+        arma::vec f = dist_normal(generator::factors, 
+                                  this->get_number_of_factors(), 
+                                  seed);
         return this->getCWI(f, idio_id);
     }
 
@@ -260,48 +251,39 @@ namespace idl
         return cwi;
     }
     
-    arma::vec Portfolio::marginal_loss(arma::vec f, size_t idio_id)
+    arma::vec Portfolio::marginal_loss(arma::vec f, size_t idio_id, double div_threshold)
     {
         arma::vec output(this->size());
 
         auto it_position = this->begin();
-        auto it_weights  = this->m_weights.begin();
         auto it_output   = output.begin();
-        auto it_pd       = this->m_pds.begin();
-        auto it_recovery = this->m_recoveries.begin();
-
-        while (it_weights != this->m_weights.end())
+        
+        while (it_position != this->end())
         {
-            double systematic = arma::accu((*it_weights->second.get()) % f);
-            double cwi = systematic 
-                       + (it_weights->second->get_idiosyncratic()
-                       * this->m_dist_scenarios(m_generator_idiosyncratic, 
-                                                idio_id + it_position->second->get_idio_seed()));
-            *it_output = (cwi > this->m_dist_scenarios.cdf(it_pd->second)) ? 
-                         (*it_recovery->second)(this->m_generator_recovery) 
-                         * it_position->second->get_jtd() : 0;
+            *it_output = it_position->second->loss(f, 
+                                                   idio_id,
+                                                   div_threshold);
+            
             it_position++;
-            it_weights++;
             it_output++;
-            it_pd++;
         }
 
         return output;
     }
 
-    void Portfolio::v_marginal_loss(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    void Portfolio::v_marginal_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads)
     {
         while (id < n)
         {
-            arma::vec f = this->m_dist_scenarios(m_generator_factors, 
-                                                 this->get_number_of_factors(), 
-                                                 seed);
-            r->row(id) = this->marginal_loss(f, id).t();
+            arma::vec f = dist_normal(generator::factors, 
+                                      this->get_number_of_factors(), 
+                                      seed);
+            r->row(id) = this->marginal_loss(f, id, div_threshold).t();
             id += n_threads;
         }
     }
 
-    arma::mat Portfolio::marginal_loss(size_t n, size_t seed, size_t n_threads)
+    arma::mat Portfolio::marginal_loss(size_t n, size_t seed, double div_threshold, size_t n_threads)
     {
         arma::mat loss = arma::zeros(n, this->size());
 
@@ -309,7 +291,38 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_marginal_loss, this, &loss, n, seed, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_marginal_loss, this, &loss, n, seed, div_threshold, it_thread, n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+    
+    void Portfolio::v_total_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads)
+    {
+        while (id < n)
+        {
+            arma::vec f = dist_normal(generator::factors, 
+                                      this->get_number_of_factors(), 
+                                      seed);
+            r->row(id) = arma::accu(this->marginal_loss(f, id, div_threshold));
+            id += n_threads;
+        }
+    }
+
+    arma::vec Portfolio::total_loss(size_t n, size_t seed, double div_threshold, size_t n_threads)
+    {
+        arma::vec loss = arma::zeros(n);
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss, this, &loss, n, seed, div_threshold, it_thread, n_threads);
         }
 
         for (auto & ii: v_threads)

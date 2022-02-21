@@ -36,7 +36,7 @@ namespace idl
         return output->second;
     }
     
-    double IDLParams::get_default_probability(std::string value, unsigned int rating)
+    PD IDLParams::get_default_probability(std::string value, unsigned int rating)
     {
         auto output = this->m_ratings.find(value);
 
