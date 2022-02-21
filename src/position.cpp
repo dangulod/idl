@@ -156,7 +156,8 @@ namespace idl
                                 size_t n_splits)
     {
         double systematic = this->get_systematic(factors);
-        return systematic *
+        return systematic + 
+               this->get_weights()->get_idiosyncratic() *
                dist_normal(generator::idiosyncratic,
                            n_splits, 
                            this->get_idio_seed() + idio_id);
