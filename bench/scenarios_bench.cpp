@@ -35,6 +35,9 @@ static void SCENARIOS_BENCH(benchmark::State& state) {
 BENCHMARK(SCENARIOS_BENCH)
     ->Args({100})
     ->Args({1000})
-    ->Args({10000});
+    ->Args({10000})
+    ->MeasureProcessCPUTime()
+    ->UseRealTime()
+    ->Unit(benchmark::kSecond);
 
 BENCHMARK_MAIN();

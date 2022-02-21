@@ -17,7 +17,7 @@ endmacro()
 IDL_option(BUILD_IDL_TESTS "Set to ON to build IDL tests." ON)
 IDL_option(USE_SYSTEM_GTEST
     "If ON, this project will look in the system paths for an installed gtest library" OFF)
-IDL_option(BUILD_IDL_BENCHMARK "Set to ON to build IDL benchmark." OFF)
+IDL_option(BUILD_IDL_BENCHMARK "Set to ON to build IDL benchmark." ON)
 IDL_option(USE_SYSTEM_GBENCH
     "If ON, this project will look in the system paths for an installed google benchmark library" OFF)
 IDL_option(BUILD_IDLPY
