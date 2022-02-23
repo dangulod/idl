@@ -41,10 +41,10 @@ file(GLOB MODEL_SOURCES
     )
 
 include(FetchContent)
-FetchContent_Declare(googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.10.0)
-FetchContent_MakeAvailable(googletest)
+FetchContent_Declare(armadillo-code
+    GIT_REPOSITORY https://gitlab.com/conradsnicta/armadillo-code
+    GIT_TAG 10.8.x)
+FetchContent_MakeAvailable(armadillo-code)
 
 add_library(armadillo_int INTERFACE)
 target_link_libraries(armadillo_int INTERFACE armadillo)
@@ -54,6 +54,7 @@ add_library(arma::arma ALIAS armadillo_int)
 
 add_library(IDL SHARED ${MODEL_SOURCES})
 add_library(IDL::Core ALIAS IDL)
+
 target_link_libraries(IDL arma::arma)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
