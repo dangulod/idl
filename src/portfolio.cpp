@@ -185,7 +185,13 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_rand, this, &rand, n, seed, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_rand,
+                                                  this,
+                                                  &rand,
+                                                  n,
+                                                  seed,
+                                                  it_thread,
+                                                  n_threads);
         }
 
         for (auto & ii: v_threads)
@@ -223,7 +229,11 @@ namespace idl
         return this->getCWI(f, idio_id);
     }
 
-    void Portfolio::v_cwi(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    void Portfolio::v_cwi(arma::mat *r,
+                          size_t n,
+                          size_t seed,
+                          size_t id,
+                          size_t n_threads)
     {
         while (id < n)
         {
@@ -240,7 +250,13 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_cwi, this, &cwi, n, seed, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_cwi,
+                                                  this,
+                                                  &cwi,
+                                                  n,
+                                                  seed,
+                                                  it_thread,
+                                                  n_threads);
         }
 
         for (auto & ii: v_threads)
@@ -251,7 +267,9 @@ namespace idl
         return cwi;
     }
     
-    arma::vec Portfolio::marginal_loss(arma::vec f, size_t idio_id, double div_threshold)
+    arma::vec Portfolio::component_loss(arma::vec f, 
+                                        size_t idio_id, 
+                                        double div_threshold)
     {
         arma::vec output(this->size());
 
@@ -260,7 +278,7 @@ namespace idl
         
         while (it_position != this->end())
         {
-            *it_output = it_position->second->loss(f, 
+            *it_output = it_position->second->loss(f,
                                                    idio_id,
                                                    div_threshold);
             
@@ -271,19 +289,49 @@ namespace idl
         return output;
     }
 
-    void Portfolio::v_marginal_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads)
+    arma::vec Portfolio::id_component_loss(arma::mat *r,
+                                           size_t seed,
+                                           double div_threshold,
+                                           size_t id)
+    {
+        arma::vec f = dist_normal(generator::factors, 
+                                  this->get_number_of_factors(), 
+                                  seed);
+        return this->component_loss(f, id, div_threshold);
+    }
+
+    void Portfolio::v_component_loss(arma::mat *r,
+                                     size_t n,
+                                     size_t seed,
+                                     double div_threshold,
+                                     size_t id,
+                                     size_t n_threads)
     {
         while (id < n)
         {
-            arma::vec f = dist_normal(generator::factors, 
-                                      this->get_number_of_factors(), 
-                                      seed);
-            r->row(id) = this->marginal_loss(f, id, div_threshold).t();
+            r->row(id) = this->id_component_loss(r, seed, div_threshold, id).t();
             id += n_threads;
         }
     }
 
-    arma::mat Portfolio::marginal_loss(size_t n, size_t seed, double div_threshold, size_t n_threads)
+    void Portfolio::v_component_loss_scen(arma::mat *r, 
+                                          std::vector<size_t> scenarios_ids, 
+                                          size_t seed, 
+                                          double div_threshold,
+                                          size_t id,
+                                          size_t n_threads)
+    {
+        while (id < scenarios_ids.size())
+        {
+            r->row(id) = this->id_component_loss(r, seed, div_threshold, scenarios_ids.at(id)).t();
+            id += n_threads;
+        }
+    }
+
+    arma::mat Portfolio::component_loss(size_t n,
+                                        size_t seed,
+                                        double div_threshold,
+                                        size_t n_threads)
     {
         arma::mat loss = arma::zeros(n, this->size());
 
@@ -291,7 +339,14 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_marginal_loss, this, &loss, n, seed, div_threshold, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_component_loss,
+                                                  this,
+                                                  &loss,
+                                                  n,
+                                                  seed,
+                                                  div_threshold,
+                                                  it_thread,
+                                                  n_threads);
         }
 
         for (auto & ii: v_threads)
@@ -301,20 +356,79 @@ namespace idl
 
         return loss;
     }
+
+    arma::mat Portfolio::component_loss(std::vector<size_t> scenarios_ids,
+                                        size_t seed, 
+                                        double div_threshold, 
+                                        size_t n_threads)
+    {
+        arma::mat loss = arma::zeros(scenarios_ids.size(), this->size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_component_loss_scen,
+                                                  this,
+                                                  &loss,
+                                                  scenarios_ids,
+                                                  seed,
+                                                  div_threshold,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+
+    double Portfolio::id_total_loss(arma::mat *r,
+                                    size_t seed,
+                                    double div_threshold,
+                                    size_t id)
+    {
+        arma::vec f = dist_normal(generator::factors, 
+                                      this->get_number_of_factors(), 
+                                      seed);
+        return arma::accu(this->component_loss(f, id, div_threshold));
+    }
     
-    void Portfolio::v_total_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads)
+    void Portfolio::v_total_loss(arma::mat *r,
+                                 size_t n,
+                                 size_t seed,
+                                 double div_threshold,
+                                 size_t id,
+                                 size_t n_threads)
     {
         while (id < n)
         {
-            arma::vec f = dist_normal(generator::factors, 
-                                      this->get_number_of_factors(), 
-                                      seed);
-            r->row(id) = arma::accu(this->marginal_loss(f, id, div_threshold));
+            r->at(id) = this->id_total_loss(r, seed, div_threshold, id);
             id += n_threads;
         }
     }
 
-    arma::vec Portfolio::total_loss(size_t n, size_t seed, double div_threshold, size_t n_threads)
+    void Portfolio::v_total_loss_scen(arma::mat *r,
+                                      std::vector<size_t> scenarios_ids, 
+                                      size_t seed,
+                                      double div_threshold,
+                                      size_t id,
+                                      size_t n_threads)
+    {
+        while (id < scenarios_ids.size())
+        {
+            r->at(id) = this->id_total_loss(r, seed, div_threshold, scenarios_ids.at(id));
+            id += n_threads;
+        }
+    }
+
+    arma::vec Portfolio::total_loss(size_t n,
+                                    size_t seed,
+                                    double div_threshold,
+                                    size_t n_threads)
     {
         arma::vec loss = arma::zeros(n);
 
@@ -322,7 +436,43 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss, this, &loss, n, seed, div_threshold, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss,
+                                                  this,
+                                                  &loss,
+                                                  n,
+                                                  seed,
+                                                  div_threshold,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+
+    arma::vec Portfolio::total_loss(std::vector<size_t> scenarios_ids,
+                                    size_t seed,
+                                    double div_threshold,
+                                    size_t n_threads)
+    {
+        arma::vec loss = arma::zeros(scenarios_ids.size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss_scen,
+                                                  this,
+                                                  &loss,
+                                                  scenarios_ids,
+                                                  seed,
+                                                  div_threshold,
+                                                  it_thread,
+                                                  n_threads);
         }
 
         for (auto & ii: v_threads)

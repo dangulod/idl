@@ -12,10 +12,11 @@ add_executable(
 )
 
 target_link_libraries(
-    IDL_tests 
+    IDL_tests
     PRIVATE
     GTest::GTest
     IDL::Core
+    arma::arma
 )
 
 add_test(NAME IDL_tests COMMAND IDL_tests)

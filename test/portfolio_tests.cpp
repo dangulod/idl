@@ -48,5 +48,5 @@ TEST(Portfolio, class)
 
     idl::Portfolio p = idl::Portfolio::from_json("/tmp/portfolio.json");
 
-    p.marginal_loss(10, 123456789, 0, 1).print();
+    p.component_loss(100, 123456789, 0, 1).print();
 }

@@ -18,6 +18,10 @@ void ex_arma(py::module_ &m) {
         {
             return object.n_cols;
         })
+        .def_property_readonly("__len__",[](const arma::Mat<double> & object)
+        {
+            return object.size();
+        })
         .def("__getitem__", [](const arma::Mat<double> & object, py::tuple ii)
         {
             if (ii.size() != 2)
@@ -34,7 +38,7 @@ void ex_arma(py::module_ &m) {
         })
         .def("__repr__", [](const arma::Mat<double> & object)
         {
-            std::string str("Arma matrix with (");
+            std::string str("Arma matrix (");
             str.append(std::to_string(object.n_rows));
             str.append(", ");
             str.append(std::to_string(object.n_cols));
@@ -58,6 +62,49 @@ void ex_arma(py::module_ &m) {
                 shape,                                   /* shape of the matrix       */
                 strides                                  /* strides for each axis     */
             ));
+        })
+        ;
+    py::class_<arma::vec>(m, "arma_vec")
+        .def_property_readonly("n_rows", [](const arma::vec & object)
+        {
+            return object.n_rows;
+        })
+        .def_property_readonly("n_cols",[](const arma::vec & object)
+        {
+            return object.n_cols;
+        })
+        .def_property_readonly("__len__",[](const arma::vec & object)
+        {
+            return object.size();
+        })
+        .def("__getitem__", [](const arma::vec & object, size_t ii)
+        {
+
+            if (ii >= object.size())
+            {
+                throw std::out_of_range("Arma Vec indexes out of range");
+            }
+
+            return object.at(ii);
+        })
+        .def("__repr__", [](const arma::vec & object)
+        {
+            std::string str("Arma vec (");
+            str.append(std::to_string(object.size()));
+            str.append(")");
+
+            return str;
+        })
+        .def("to_numpy", [](const arma::vec & object)
+        {
+            auto result        = py::array_t<double>(object.size());
+            auto result_buffer = result.request();
+            double *result_ptr    = (double *) result_buffer.ptr;
+
+            // copy std::vector -> py::array 
+            std::memcpy(result_ptr, object.memptr(), object.size() * sizeof(double));
+
+            return result;
         })
         ;
 }
