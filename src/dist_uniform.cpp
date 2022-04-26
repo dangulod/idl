@@ -73,6 +73,11 @@ namespace idl
             return root;
         }
 
+        double Uniform::mean()
+        {
+            return (this->m_lower + this->m_upper) / 2;
+        }
+
         Uniform Uniform::from_ptree(const pt::ptree & value)
         {
             return Uniform(value.find("lower")->second.get_value<double>(),

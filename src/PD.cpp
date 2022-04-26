@@ -4,9 +4,7 @@ namespace idl
 {
     PD::PD(double pd): m_pd(pd)
     {
-        static idl::distributions::Normal normal_distribution(0, 1);
-
-        this->m_n_inv_pd = normal_distribution.quantile(pd);
+        this->m_n_inv_pd = static_distributions::dist_normal.quantile(pd);
     }
 
     bool PD::operator ==(const PD &rhs) const
@@ -29,5 +27,10 @@ namespace idl
         return this->m_n_inv_pd;
     }
 
+    double PD::get_conditional_pd(double systematic,
+                                  double weight_idio)
+    {
+        return static_distributions::dist_normal.cdf((this->get_normal_inverse_pd() - systematic) / weight_idio);
+    }
 } // namespace idl
 

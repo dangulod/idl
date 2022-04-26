@@ -12,7 +12,8 @@ namespace idl
 {
     namespace distributions
     {
-        class Beta: public Distribution
+        class Beta: public Distribution,
+            std::enable_shared_from_this<Beta>
         {
         private:
             double m_shape1, m_shape2, m_a, m_b;
@@ -32,6 +33,8 @@ namespace idl
             double get_shape2() const;
             double get_a() const;
             double get_b() const;
+
+            double mean();
 
             pt::ptree to_ptree();
             static Beta from_ptree(const pt::ptree & value);

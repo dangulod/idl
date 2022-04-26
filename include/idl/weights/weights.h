@@ -9,8 +9,12 @@ namespace pt = boost::property_tree;
 
 namespace idl
 {
-    class Weights: public arma::vec
+    class Weights: public arma::vec, 
+        std::enable_shared_from_this<Weights>, 
+        std::enable_shared_from_this<arma::vec>
     {
+    private:
+        using std::enable_shared_from_this<arma::vec>::shared_from_this;
         double m_R2, m_idiosyncratic;
     public:
         Weights(std::vector<double> vec);

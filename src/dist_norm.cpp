@@ -83,6 +83,11 @@ namespace idl
             return root;
         }
 
+        double Normal::mean()
+        {
+            return this->get_mean();
+        }
+
         Normal Normal::from_ptree(const pt::ptree & value)
         {
             return Normal(value.find("mean")->second.get_value<double>(),

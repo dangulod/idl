@@ -5,7 +5,7 @@ namespace idl
     void IDLParams::add(std::string name, 
                         RatingPD rating)
     {        
-        auto success = this->m_ratings.insert(std::make_pair(name, std::make_shared<RatingPD>(rating)));
+        auto success = this->m_ratings.insert(std::make_pair(name, std::make_shared<RatingPD>(std::move(rating))));
 
         if (!success.second)
         {
@@ -14,9 +14,9 @@ namespace idl
     }
 
     void IDLParams::add(std::string name, 
-                        distributions::Beta dist)
+                        Recovery dist)
     {
-        auto success = this->m_recoveries.insert(std::make_pair(name, std::make_shared<distributions::Beta>(dist)));
+        auto success = this->m_recoveries.insert(std::make_pair(name, std::make_shared<Recovery>(std::move(dist))));
 
         if (!success.second)
         {
@@ -24,7 +24,7 @@ namespace idl
         }
     }
 
-    std::shared_ptr<distributions::Beta> IDLParams::get_recovery(std::string value)
+    std::shared_ptr<Recovery> IDLParams::get_recovery(std::string value)
     {
         auto output = this->m_recoveries.find(value);
 
@@ -74,7 +74,7 @@ namespace idl
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("recoveries"))
         {
-            output.add(ii.first, idl::distributions::Beta::from_ptree(ii.second));
+            output.add(ii.first, idl::Recovery::from_ptree(ii.second));
         }
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("ratingPD"))

@@ -8,7 +8,7 @@ namespace idl
         m_jtd(jtd), m_notional(notional),
         m_weight_dimension(rating, region, sector),
         m_idio_seed(idio_seed), m_pd(0), 
-        m_recovery(std::shared_ptr<distributions::Beta>(nullptr)),
+        m_recovery(std::shared_ptr<Recovery>(nullptr)),
         m_weights(std::shared_ptr<Weights>(nullptr))
     { }
 
@@ -17,7 +17,7 @@ namespace idl
         m_jtd(jtd), m_notional(notional), m_weight_dimension(w_dim),
         m_idio_seed(idio_seed),
         m_pd(0), 
-        m_recovery(std::shared_ptr<distributions::Beta>(nullptr)),
+        m_recovery(std::shared_ptr<Recovery>(nullptr)),
         m_weights(std::shared_ptr<Weights>(nullptr))
     { }
 
@@ -99,12 +99,12 @@ namespace idl
         }
     }
 
-    std::shared_ptr<distributions::Beta> Position::get_recovery() const
+    std::shared_ptr<Recovery> Position::get_recovery() const
     {
         return this->m_recovery;
     }
 
-    void Position::set_recovery(const std::shared_ptr<distributions::Beta> value)
+    void Position::set_recovery(const std::shared_ptr<Recovery> value)
     {
         if (this->m_recovery != value)
         {
@@ -130,70 +130,37 @@ namespace idl
         return arma::accu((*this->get_weights()) % factors);
     }
 
-    size_t Position::get_n_splits(double div_threshold)
-    {
-        return (div_threshold > 0) ? 
-                std::ceil(this->get_jtd() / div_threshold) : 
-                1;
-    }
-
-    arma::vec Position::get_diversified_jtd(double div_threshold)
-    {
-        size_t n_splits = this->get_n_splits(div_threshold);
-
-        if (n_splits == 1) return arma::vec{this->get_jtd()};
-
-        arma::vec jtd(n_splits, arma::fill::ones);
-        jtd *= this->get_jtd() / div_threshold;
-
-        jtd.back() = std::fmod(this->get_jtd(), div_threshold) / div_threshold;
-
-        return jtd;
-    }
-
-    arma::vec Position::get_cwi(arma::vec factors, 
-                                size_t idio_id,
-                                size_t n_splits)
+    double Position::get_cwi(arma::vec factors, 
+                             size_t idio_id)
     {
         return this->get_systematic(factors) + 
                this->get_weights()->get_idiosyncratic() *
-               dist_normal(generator::idiosyncratic,
-                           n_splits, 
-                           this->get_idio_seed() + idio_id);
+               static_distributions::dist_normal(generator::idiosyncratic,
+                                                 this->get_idio_seed() + idio_id);
     }
 
     double Position::loss(arma::vec factors, 
                           size_t idio_id,
-                          double div_threshold)
+                          bool diversification)
     {
-        double loss(0);
-
-        arma::vec jtd = this->get_diversified_jtd(div_threshold);
-
-        arma::vec cwi = this->get_cwi(factors, 
-                                      idio_id,
-                                      jtd.size());
-
-        arma::vec u_recovery = dist_uniform(generator::recovery,
-                                            jtd.size(),
-                                            this->get_idio_seed() + idio_id);
-
-        auto it_jtd = jtd.begin();
-        auto it_cwi = cwi.begin();
-        auto it_rec = u_recovery.begin();
-
-        while (it_jtd != jtd.end())
+        if (diversification)
         {
-            if ((*it_cwi) > this->get_PD().get_normal_inverse_pd())
-            {
-                loss += this->get_recovery()->quantile(*it_rec) * (*it_jtd);
-            }
-                it_jtd++;
-                it_cwi++;
-                it_rec++;
+            double systematic = this->get_systematic(factors);
+
+            double pd_c = this->get_PD().get_conditional_pd(systematic, 
+                                                            this->get_weights()->get_idiosyncratic());
+
+            return pd_c * (1 - this->get_recovery()->generate_recovery()) * this->m_jtd;
         }
 
-        return loss;
+        double cwi = this->get_cwi(factors, 
+                                      idio_id);
+
+        if (cwi > this->get_PD().get_normal_inverse_pd()) return 0;
+
+        double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id);
+        
+        return ((1 - recovery) * this->m_jtd);
     }
 
 } // namespace idl

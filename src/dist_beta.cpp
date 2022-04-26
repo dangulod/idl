@@ -89,6 +89,12 @@ namespace idl
             return this->m_b;
         }
 
+        double Beta::mean()
+        {
+            double scale = this->m_b - this->m_a;
+            return this->m_shape1 / (this->m_shape2 + this->m_shape1) * scale + this->m_a;
+        }
+
         pt::ptree Beta::to_ptree()
         {
             pt::ptree root;

@@ -3,12 +3,13 @@
 
 #include <idl/weights/weights_dimension.h>
 #include <idl/risk_params/PD.h>
+#include <idl/risk_params/recovery.h>
 #include <idl/weights/weights.h>
 #include <idl/rnd_generator.h>
 
 namespace idl
 {
-    class Position
+    class Position: public std::enable_shared_from_this<Position>
     {
     private:
         double m_jtd, m_notional;
@@ -17,7 +18,7 @@ namespace idl
 
         // Set when added to a portfolio
         PD m_pd;
-        std::shared_ptr<distributions::Beta> m_recovery;
+        std::shared_ptr<Recovery> m_recovery;
         std::shared_ptr<Weights> m_weights;
 
     public:
@@ -43,23 +44,19 @@ namespace idl
         PD get_PD() const;
         void set_PD(const PD value);
 
-        std::shared_ptr<distributions::Beta> get_recovery() const;
-        void set_recovery(const std::shared_ptr<distributions::Beta> value);
+        std::shared_ptr<Recovery> get_recovery() const;
+        void set_recovery(const std::shared_ptr<Recovery> value);
         
         void set_weights(const std::shared_ptr<Weights> value);
         std::shared_ptr<Weights> get_weights() const;
-
-        size_t get_n_splits(double div_threshold);
-        arma::vec get_diversified_jtd(double div_threshold);
         
         double get_systematic(arma::vec factors);
-        arma::vec get_cwi(arma::vec factors, 
-                          size_t idio_id,
-                          size_t n_splits = 1);
+        double get_cwi(arma::vec factors, 
+                       size_t idio_id);
 
         double loss(arma::vec factors, 
                     size_t idio_id,
-                    double div_threshold);
+                    bool diversification);
     };
     
 } // namespace idl

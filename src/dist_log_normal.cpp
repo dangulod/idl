@@ -87,6 +87,11 @@ namespace idl
             return root;
         }
 
+        double LogNormal::mean()
+        {
+            return this->get_mean();
+        }
+
         LogNormal LogNormal::from_ptree(const pt::ptree & value)
         {
             return LogNormal(value.find("mean")->second.get_value<double>(),

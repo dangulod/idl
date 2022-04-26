@@ -16,8 +16,11 @@ TEST(Portfolio, class)
 
     idl::IDLParams idl_params;
 
-    idl_params.add("all", idl::distributions::Beta(1, 1, 0, 1));
-    idl_params.add("mortgages", idl::distributions::Beta(1, 1, 0, 1));
+    idl::distributions::Beta all_dist(1, 1, 0, 1);
+    std::shared_ptr<idl::distributions::Distribution> all_abs = std::make_shared<idl::distributions::Beta>(all_dist);
+
+    idl_params.add("all", idl::Recovery(all_abs));
+    idl_params.add("mortgages", idl::Recovery(0.35));
     
     idl::RatingPD sov;
     sov.add(1, 0.1);
@@ -36,7 +39,7 @@ TEST(Portfolio, class)
 
     while(ii++ < 10)
     {
-        idl::Position count(900, 1000, 5, 1, 3, ii);
+        std::shared_ptr<idl::Position> count(std::make_shared<idl::Position>(idl::Position(900, 1000, 5, 1, 3, ii)));
 
         portfolio.add_position(std::to_string(ii), count);
     }

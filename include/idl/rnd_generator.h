@@ -1,13 +1,10 @@
 #ifndef RND_GENERATOR_H__
 #define RND_GENERATOR_H__
 
-#include <idl/distributions/distributions.h>
+#include <random>
 
 namespace idl
 {
-    static idl::distributions::Normal dist_normal(0, 1);
-    static idl::distributions::Uniform dist_uniform(0, 1);
-
     namespace generator
     {
         static std::mt19937_64 factors;

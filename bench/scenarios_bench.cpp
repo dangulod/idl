@@ -11,8 +11,10 @@ static void SCENARIOS_BENCH(benchmark::State& state) {
     
     idl::IDLParams idl_params;
 
-    idl_params.add("all", idl::distributions::Beta(1, 1, 0, 1));
-    idl_params.add("mortgages", idl::distributions::Beta(1, 1, 0, 1));
+    idl_params.add("all",
+                   idl::Recovery(std::make_shared<idl::distributions::Beta>(idl::distributions::Beta(1, 1, 0, 1))));
+    idl_params.add("mortgages",
+                   idl::Recovery(std::make_shared<idl::distributions::Beta>(idl::distributions::Beta(1, 1, 0, 1))));
     
     idl::RatingPD sov;
     sov.add(1, 0.1);

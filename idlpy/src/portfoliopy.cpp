@@ -25,39 +25,36 @@ void ex_portfolio(py::module_ &m) {
         })
         .def("__add__", [](idl::Portfolio & object, 
                            std::string id,
-                           idl::Position & value)
+                           std::shared_ptr<idl::Position> value)
         {
             object.add_position(id, value);
         })
-        .def("add_position", [](idl::Portfolio & object, 
-                           std::string id,
-                           idl::Position & value)
-        {
-            object.add_position(id, value);
-        })
+        .def("add_position", &idl::Portfolio::add_position)
         .def("__repr__", [](const idl::Portfolio & object)
         {
-            std::string str("Portfolio class with ");
-            str.append(std::to_string(object.size()));
-            str.append(" counterparties");
+            std::ostringstream out;
 
-            return str;
+            out << "Portfolio class with "        <<
+                    std::to_string(object.size()) <<
+                    " counterparties";
+
+            return out.str();
         })
         .def("get_correlation_structure", &idl::Portfolio::correlation_sructure)
         .def("get_scenarios", &idl::Portfolio::get_scenarios, 
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
         .def("get_CWIs", &idl::Portfolio::get_CWIs, 
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<size_t, size_t, double, size_t>(&idl::Portfolio::component_loss), 
+        .def("component_loss", py::overload_cast<size_t, size_t, bool, size_t>(&idl::Portfolio::component_loss), 
             py::arg("n"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, double, size_t>(&idl::Portfolio::component_loss), 
+        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, bool, size_t>(&idl::Portfolio::component_loss), 
             py::arg("scenarios_ids"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<size_t, size_t, double, size_t>(&idl::Portfolio::total_loss), 
+        .def("total_loss", py::overload_cast<size_t, size_t, bool, size_t>(&idl::Portfolio::total_loss), 
             py::arg("n"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, double, size_t>(&idl::Portfolio::total_loss), 
+        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, bool, size_t>(&idl::Portfolio::total_loss), 
             py::arg("scenarios_ids"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
         ;
-    py::class_<idl::Position>(m, "Position")
+    py::class_<idl::Position, std::shared_ptr<idl::Position>>(m, "Position")
         .def(py::init<const double &, const double &, const unsigned &, const unsigned &, const unsigned &, size_t &>())
         .def(py::init<const double &, const double &, idl::WeightsDimension &, size_t &>())
         .def("__eq__", &idl::Position::operator==)
@@ -70,19 +67,21 @@ void ex_portfolio(py::module_ &m) {
         .def_property_readonly("idio_seed", &idl::Position::get_idio_seed)
         .def("__repr__", [](const idl::Position & object)
         {
-            std::string str("[");
-            str.append(double_to_string(object.get_jtd()));
-            str.append(", ");
-            str.append(double_to_string(object.get_notional()));
-            str.append(", ");
-            str.append(std::to_string(object.get_rating()));
-            str.append(", ");
-            str.append(std::to_string(object.get_region()));
-            str.append(", ");
-            str.append(std::to_string(object.get_sector()));
-            str.append("]");
+            std::ostringstream out;
 
-            return str;
+            out << "[" <<
+                    double_to_string(object.get_jtd())      <<
+                    ", "                                    <<
+                    double_to_string(object.get_notional()) <<
+                    ", "                                    <<
+                    std::to_string(object.get_rating())     <<
+                    ", "                                    <<
+                    std::to_string(object.get_region())     <<
+                    ", "                                    <<
+                    std::to_string(object.get_sector())     <<
+                    "]";
+
+            return out.str();
         })
         ;
 }

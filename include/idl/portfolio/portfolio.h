@@ -16,15 +16,49 @@ namespace idl
         IDLParams m_idlparams;
         std::map<std::string, std::shared_ptr<Position>> m_position;
 
-        void v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
-        void v_cwi (arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads);
-        void v_component_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads);
-        void v_component_loss_scen(arma::mat *r, std::vector<size_t> scenarios_ids, size_t seed, double div_threshold, size_t id, size_t n_threads);
-        void v_total_loss(arma::mat *r, size_t n, size_t seed, double div_threshold, size_t id, size_t n_threads);
-        void v_total_loss_scen(arma::mat *r, std::vector<size_t> scenarios_ids, size_t seed, double div_threshold, size_t id, size_t n_threads);
+        void v_rand(arma::mat *r,
+                    size_t n,
+                    size_t seed,
+                    size_t id,
+                    size_t n_threads);
+        void v_cwi (arma::mat *r,
+                    size_t n,
+                    size_t seed,
+                    size_t id,
+                    size_t n_threads);
+        void v_component_loss(arma::mat *r,
+                              size_t n,
+                              size_t seed,
+                              bool diversification,
+                              size_t id,
+                              size_t n_threads);
+        void v_component_loss_scen(arma::mat *r,
+                                   std::vector<size_t> scenarios_ids,
+                                   size_t seed,
+                                   bool diversification,
+                                   size_t id,
+                                   size_t n_threads);
+        void v_total_loss(arma::mat *r,
+                          size_t n,
+                          size_t seed,
+                          bool diversification,
+                          size_t id,
+                          size_t n_threads);
+        void v_total_loss_scen(arma::mat *r,
+                               std::vector<size_t> scenarios_ids,
+                               size_t seed,
+                               bool diversification,
+                               size_t id,
+                               size_t n_threads);
 
-        arma::vec id_component_loss(arma::mat *r, size_t seed, double div_threshold, size_t id);
-        double id_total_loss(arma::mat *r, size_t seed, double div_threshold, size_t id);
+        arma::vec id_component_loss(arma::mat *r,
+                                    size_t seed,
+                                    bool diversification,
+                                    size_t id);
+        double id_total_loss(arma::mat *r,
+                             size_t seed,
+                             bool diversification,
+                             size_t id);
 
     public:
         Portfolio() = delete;
@@ -35,10 +69,9 @@ namespace idl
         Portfolio& operator=(Portfolio && value) = default;
         ~Portfolio() = default;
 
-        void add_position(std::string id, Position & value);
-        void add_position(std::string id, Position && value);
+        void add_position(std::string id, std::shared_ptr<Position> value);
 
-        Position & operator[](const std::string id);
+        std::shared_ptr<Position> operator[](const std::string id);
         // bool operator ==(const Portfolio &rhs) const;
 
         std::map<std::string, std::shared_ptr<Position>>::iterator begin();
@@ -72,22 +105,22 @@ namespace idl
 
         arma::vec component_loss(arma::vec f,
                                  size_t idio_id,
-                                 double div_threshold = 0);
+                                 bool diversification = false);
         arma::mat component_loss(size_t n,
                                  size_t seed,
-                                 double div_threshold = 0,
+                                 bool diversification = false,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::mat component_loss(std::vector<size_t> scenarios_ids,
                                  size_t seed,
-                                 double div_threshold = 0,
+                                 bool diversification = false,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(size_t n,
                              size_t seed,
-                             double div_threshold = 0,
+                             bool diversification = false,
                              size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(std::vector<size_t> scenarios_ids,
                              size_t seed,
-                             double div_threshold = 0,
+                             bool diversification = false,
                              size_t n_threads = std::thread::hardware_concurrency());
     };
     

@@ -38,13 +38,15 @@ void ex_arma(py::module_ &m) {
         })
         .def("__repr__", [](const arma::Mat<double> & object)
         {
-            std::string str("Arma matrix (");
-            str.append(std::to_string(object.n_rows));
-            str.append(", ");
-            str.append(std::to_string(object.n_cols));
-            str.append(")");
+            std::ostringstream out;
 
-            return str;
+            out << "Arma matrix (" << 
+                    std::to_string(object.n_rows) <<
+                    ", "                          << 
+                    std::to_string(object.n_cols) <<
+                    ")";
+
+            return out.str();
         })
         .def("to_numpy", [](const arma::Mat<double> & object)
         {
@@ -89,11 +91,13 @@ void ex_arma(py::module_ &m) {
         })
         .def("__repr__", [](const arma::vec & object)
         {
-            std::string str("Arma vec (");
-            str.append(std::to_string(object.size()));
-            str.append(")");
+            std::ostringstream out;
 
-            return str;
+            out << "Arma vec (" <<
+                    std::to_string(object.size()) << 
+                    ")";
+            
+            return out.str();
         })
         .def("to_numpy", [](const arma::vec & object)
         {

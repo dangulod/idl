@@ -8,29 +8,14 @@ namespace idl
         
     }
 
-    void Portfolio::add_position(std::string id, Position & value)
+    void Portfolio::add_position(std::string id, std::shared_ptr<Position> value)
     {
-        value.set_PD(this->get_IDLParams().get_default_probability("SOV", 
-                                                                   value.get_rating()));
-        value.set_recovery(this->get_IDLParams().get_recovery("all"));
-        value.set_weights(this->get_factor().at(value.get_weight_dimension()));
+        value->set_PD(this->get_IDLParams().get_default_probability("SOV", 
+                                                                    value->get_rating()));
+        value->set_recovery(this->get_IDLParams().get_recovery("all"));
+        value->set_weights(this->get_factor().at(value->get_weight_dimension()));
 
-        auto success = this->m_position.insert(std::make_pair(id, std::make_shared<Position>(value)));
-
-        if (!success.second)
-        {
-            throw std::invalid_argument("(Portfolio::add_position) Key alredy exists in the Portfolio object");
-        }
-    }
-    
-    void Portfolio::add_position(std::string id, Position && value)
-    {
-        value.set_PD(this->get_IDLParams().get_default_probability("SOV", 
-                                                                   value.get_rating()));
-        value.set_recovery(this->get_IDLParams().get_recovery("all"));
-        value.set_weights(this->get_factor().at(value.get_weight_dimension()));
-
-        auto success = this->m_position.insert(std::make_pair(id, std::make_shared<Position>(value)));
+        auto success = this->m_position.insert(std::make_pair(id, value));
 
         if (!success.second)
         {
@@ -38,7 +23,7 @@ namespace idl
         }
     }
 
-    Position & Portfolio::operator[](const std::string id)
+    std::shared_ptr<Position> Portfolio::operator[](const std::string id)
     {
         auto output = this->m_position.find(id);
 
@@ -47,7 +32,7 @@ namespace idl
             throw std::out_of_range("(Portfolio[]) key does not exists");
         }
 
-        return *output->second.get();
+        return output->second;
     }
 
     pt::ptree Portfolio::to_ptree()
@@ -79,7 +64,8 @@ namespace idl
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("counterparties"))
         {
-            output.add_position(ii.first, Position::from_ptree(ii.second));
+            output.add_position(ii.first,
+                                std::make_shared<Position>(Position::from_ptree(ii.second)));
         }
 
         return output;
@@ -170,9 +156,9 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = dist_normal(generator::factors, 
-                                     this->get_number_of_factors(), 
-                                     seed + id).t();
+            r->row(id) = static_distributions::dist_normal(generator::factors, 
+                                                           this->get_number_of_factors(), 
+                                                           seed + id).t();
             id += n_threads;
         }
     }
@@ -212,8 +198,7 @@ namespace idl
         while (it_position != this->end())
         {
             (*it_output) = it_position->second->get_cwi(f,
-                                                        idio_id,
-                                                        1).at(0);
+                                                        idio_id);
             it_position++;
             it_output++;
         }
@@ -223,9 +208,9 @@ namespace idl
 
     arma::vec Portfolio::getCWI(size_t seed, size_t idio_id)
     {
-        arma::vec f = dist_normal(generator::factors, 
-                                  this->get_number_of_factors(), 
-                                  seed);
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
         return this->getCWI(f, idio_id);
     }
 
@@ -269,7 +254,7 @@ namespace idl
     
     arma::vec Portfolio::component_loss(arma::vec f, 
                                         size_t idio_id, 
-                                        double div_threshold)
+                                        bool diversification)
     {
         arma::vec output(this->size());
 
@@ -280,7 +265,7 @@ namespace idl
         {
             *it_output = it_position->second->loss(f,
                                                    idio_id,
-                                                   div_threshold);
+                                                   diversification);
             
             it_position++;
             it_output++;
@@ -291,25 +276,25 @@ namespace idl
 
     arma::vec Portfolio::id_component_loss(arma::mat *r,
                                            size_t seed,
-                                           double div_threshold,
+                                           bool diversification,
                                            size_t id)
     {
-        arma::vec f = dist_normal(generator::factors, 
-                                  this->get_number_of_factors(), 
-                                  seed);
-        return this->component_loss(f, id, div_threshold);
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
+        return this->component_loss(f, id, diversification);
     }
 
     void Portfolio::v_component_loss(arma::mat *r,
                                      size_t n,
                                      size_t seed,
-                                     double div_threshold,
+                                     bool diversification,
                                      size_t id,
                                      size_t n_threads)
     {
         while (id < n)
         {
-            r->row(id) = this->id_component_loss(r, seed, div_threshold, id).t();
+            r->row(id) = this->id_component_loss(r, seed, diversification, id).t();
             id += n_threads;
         }
     }
@@ -317,20 +302,20 @@ namespace idl
     void Portfolio::v_component_loss_scen(arma::mat *r, 
                                           std::vector<size_t> scenarios_ids, 
                                           size_t seed, 
-                                          double div_threshold,
+                                          bool diversification,
                                           size_t id,
                                           size_t n_threads)
     {
         while (id < scenarios_ids.size())
         {
-            r->row(id) = this->id_component_loss(r, seed, div_threshold, scenarios_ids.at(id)).t();
+            r->row(id) = this->id_component_loss(r, seed, diversification, scenarios_ids.at(id)).t();
             id += n_threads;
         }
     }
 
     arma::mat Portfolio::component_loss(size_t n,
                                         size_t seed,
-                                        double div_threshold,
+                                        bool diversification,
                                         size_t n_threads)
     {
         arma::mat loss = arma::zeros(n, this->size());
@@ -344,7 +329,7 @@ namespace idl
                                                   &loss,
                                                   n,
                                                   seed,
-                                                  div_threshold,
+                                                  diversification,
                                                   it_thread,
                                                   n_threads);
         }
@@ -359,7 +344,7 @@ namespace idl
 
     arma::mat Portfolio::component_loss(std::vector<size_t> scenarios_ids,
                                         size_t seed, 
-                                        double div_threshold, 
+                                        bool diversification, 
                                         size_t n_threads)
     {
         arma::mat loss = arma::zeros(scenarios_ids.size(), this->size());
@@ -373,7 +358,7 @@ namespace idl
                                                   &loss,
                                                   scenarios_ids,
                                                   seed,
-                                                  div_threshold,
+                                                  diversification,
                                                   it_thread,
                                                   n_threads);
         }
@@ -388,25 +373,25 @@ namespace idl
 
     double Portfolio::id_total_loss(arma::mat *r,
                                     size_t seed,
-                                    double div_threshold,
+                                    bool diversification,
                                     size_t id)
     {
-        arma::vec f = dist_normal(generator::factors, 
-                                      this->get_number_of_factors(), 
-                                      seed);
-        return arma::accu(this->component_loss(f, id, div_threshold));
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
+        return arma::accu(this->component_loss(f, id, diversification));
     }
     
     void Portfolio::v_total_loss(arma::mat *r,
                                  size_t n,
                                  size_t seed,
-                                 double div_threshold,
+                                 bool diversification,
                                  size_t id,
                                  size_t n_threads)
     {
         while (id < n)
         {
-            r->at(id) = this->id_total_loss(r, seed, div_threshold, id);
+            r->at(id) = this->id_total_loss(r, seed, diversification, id);
             id += n_threads;
         }
     }
@@ -414,20 +399,20 @@ namespace idl
     void Portfolio::v_total_loss_scen(arma::mat *r,
                                       std::vector<size_t> scenarios_ids, 
                                       size_t seed,
-                                      double div_threshold,
+                                      bool diversification,
                                       size_t id,
                                       size_t n_threads)
     {
         while (id < scenarios_ids.size())
         {
-            r->at(id) = this->id_total_loss(r, seed, div_threshold, scenarios_ids.at(id));
+            r->at(id) = this->id_total_loss(r, seed, diversification, scenarios_ids.at(id));
             id += n_threads;
         }
     }
 
     arma::vec Portfolio::total_loss(size_t n,
                                     size_t seed,
-                                    double div_threshold,
+                                    bool diversification,
                                     size_t n_threads)
     {
         arma::vec loss = arma::zeros(n);
@@ -441,7 +426,7 @@ namespace idl
                                                   &loss,
                                                   n,
                                                   seed,
-                                                  div_threshold,
+                                                  diversification,
                                                   it_thread,
                                                   n_threads);
         }
@@ -456,7 +441,7 @@ namespace idl
 
     arma::vec Portfolio::total_loss(std::vector<size_t> scenarios_ids,
                                     size_t seed,
-                                    double div_threshold,
+                                    bool diversification,
                                     size_t n_threads)
     {
         arma::vec loss = arma::zeros(scenarios_ids.size());
@@ -470,7 +455,7 @@ namespace idl
                                                   &loss,
                                                   scenarios_ids,
                                                   seed,
-                                                  div_threshold,
+                                                  diversification,
                                                   it_thread,
                                                   n_threads);
         }

@@ -14,7 +14,7 @@ namespace idl
 {
     namespace distributions
     {
-        class Distribution
+        class Distribution: public std::enable_shared_from_this<Distribution>
         {
         public:
             Distribution() = default;
@@ -23,6 +23,8 @@ namespace idl
             virtual double cdf(double x) = 0;
             virtual double pdf(double x) = 0;
             virtual double quantile(double p) = 0;
+
+            virtual double mean() = 0;
 
             template<typename engine>
             double operator()(engine & e)

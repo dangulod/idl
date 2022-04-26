@@ -1,7 +1,7 @@
 #ifndef PD_H__
 #define PD_H__
 
-#include <idl/distributions/normal.h> 
+#include <idl/static_distributions.h>
 
 namespace idl
 {
@@ -19,6 +19,9 @@ namespace idl
 
         double get_pd() const;
         double get_normal_inverse_pd() const;
+
+        double get_conditional_pd(double systematic, 
+                                  double weight_idio);
     };
 } // namespace idl
 

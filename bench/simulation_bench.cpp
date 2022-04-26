@@ -11,9 +11,11 @@ static void FACTOR_BENCH(benchmark::State& state) {
     
     idl::IDLParams idl_params;
 
-    idl_params.add("all", idl::distributions::Beta(1, 1, 0, 1));
-    idl_params.add("mortgages", idl::distributions::Beta(1, 1, 0, 1));
-    
+    idl_params.add("all",
+                   idl::Recovery(std::make_shared<idl::distributions::Beta>(idl::distributions::Beta(1, 1, 0, 1))));
+    idl_params.add("mortgages",
+                   idl::Recovery(std::make_shared<idl::distributions::Beta>(idl::distributions::Beta(1, 1, 0, 1))));
+
     idl::RatingPD sov;
     sov.add(1, 0.1);
     sov.add(2, 0.15);
@@ -31,7 +33,7 @@ static void FACTOR_BENCH(benchmark::State& state) {
 
     while(ii++ < 100)
     {
-        idl::Position count(900, 1000, 5, 1, 3, ii);
+        std::shared_ptr<idl::Position> count(std::make_shared<idl::Position>(idl::Position(900, 1000, 5, 1, 3, ii)));
 
         portfolio.add_position(std::to_string(ii), count);
     }
