@@ -2,13 +2,15 @@
 
 namespace idl
 {
-    Portfolio::Portfolio(Factor factor, IDLParams idlparams) :
+    Portfolio::Portfolio(Factor factor,
+                         IDLParams idlparams) :
         m_factor(factor), m_idlparams(idlparams)
     { 
         
     }
 
-    void Portfolio::add_position(std::string id, std::shared_ptr<Position> value)
+    void Portfolio::add_position(std::string id,
+                                 std::shared_ptr<Position> value)
     {
         value->set_PD(this->get_IDLParams().get_default_probability("SOV", 
                                                                     value->get_rating()));
@@ -53,6 +55,7 @@ namespace idl
         
         return root;
     }
+
     Portfolio Portfolio::from_ptree(const pt::ptree & value)
     {
         Portfolio output(Factor::from_ptree(value.get_child("factor")),
@@ -152,7 +155,11 @@ namespace idl
         return cor_stru;
     }
 
-    void Portfolio::v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    void Portfolio::v_rand(arma::mat *r,
+                           size_t n,
+                           size_t seed,
+                           size_t id,
+                           size_t n_threads)
     {
         while (id < n)
         {
@@ -163,7 +170,9 @@ namespace idl
         }
     }
 
-    arma::mat Portfolio::get_scenarios(size_t n, size_t seed, size_t n_threads)
+    arma::mat Portfolio::get_scenarios(size_t n,
+                                       size_t seed,
+                                       size_t n_threads)
     {
         arma::mat rand = arma::zeros(n, this->get_number_of_factors());
 
@@ -188,7 +197,8 @@ namespace idl
         return rand;
     }
 
-    arma::vec Portfolio::getCWI(arma::vec f, size_t idio_id)
+    arma::vec Portfolio::getCWI(arma::vec f,
+                                size_t idio_id)
     {
         arma::vec output(this->size());
 
@@ -206,7 +216,8 @@ namespace idl
         return output;
     }
 
-    arma::vec Portfolio::getCWI(size_t seed, size_t idio_id)
+    arma::vec Portfolio::getCWI(size_t seed,
+                                size_t idio_id)
     {
         arma::vec f = static_distributions::dist_normal(generator::factors, 
                                                         this->get_number_of_factors(), 
@@ -227,7 +238,9 @@ namespace idl
         }
     }
 
-    arma::mat Portfolio::get_CWIs(size_t n, size_t seed, size_t n_threads)
+    arma::mat Portfolio::get_CWIs(size_t n,
+                                  size_t seed,
+                                  size_t n_threads)
     {
         arma::mat cwi = arma::zeros(n, this->size());
 
@@ -294,7 +307,10 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = this->id_component_loss(r, seed, diversification, id).t();
+            r->row(id) = this->id_component_loss(r,
+                                                 seed,
+                                                 diversification,
+                                                 id).t();
             id += n_threads;
         }
     }
@@ -308,7 +324,10 @@ namespace idl
     {
         while (id < scenarios_ids.size())
         {
-            r->row(id) = this->id_component_loss(r, seed, diversification, scenarios_ids.at(id)).t();
+            r->row(id) = this->id_component_loss(r,
+                                                 seed,
+                                                 diversification,
+                                                 scenarios_ids.at(id)).t();
             id += n_threads;
         }
     }
@@ -405,7 +424,10 @@ namespace idl
     {
         while (id < scenarios_ids.size())
         {
-            r->at(id) = this->id_total_loss(r, seed, diversification, scenarios_ids.at(id));
+            r->at(id) = this->id_total_loss(r,
+                                            seed,
+                                            diversification,
+                                            scenarios_ids.at(id));
             id += n_threads;
         }
     }

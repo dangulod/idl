@@ -69,8 +69,7 @@ namespace idl
             template<typename engine>
             arma::vec operator()(engine e, size_t n, unsigned long seed)
             {
-                std::mt19937_64 generator;
-                generator.seed(seed);
+                e.seed(seed);
                 
                 arma::vec rnd(n);
 
@@ -78,7 +77,25 @@ namespace idl
                 
                 while (it_rnd != rnd.end())
                 {
-                    *it_rnd = (*this)(generator);
+                    *it_rnd = (*this)(e);
+                    it_rnd++;
+                }
+
+                return rnd;
+            }
+
+            template<typename engine>
+            arma::mat operator()(engine e, size_t n_rows, size_t n_cols, unsigned long seed)
+            {
+                e.seed(seed);
+                
+                arma::mat rnd(n_rows, n_cols);
+
+                auto it_rnd = rnd.begin();
+                
+                while (it_rnd != rnd.end())
+                {
+                    *it_rnd = (*this)(e);
                     it_rnd++;
                 }
 

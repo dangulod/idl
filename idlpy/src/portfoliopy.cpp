@@ -23,12 +23,6 @@ void ex_portfolio(py::module_ &m) {
         {
             return object[id];
         })
-        .def("__add__", [](idl::Portfolio & object, 
-                           std::string id,
-                           std::shared_ptr<idl::Position> value)
-        {
-            object.add_position(id, value);
-        })
         .def("add_position", &idl::Portfolio::add_position)
         .def("__repr__", [](const idl::Portfolio & object)
         {

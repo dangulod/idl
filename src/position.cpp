@@ -150,17 +150,18 @@ namespace idl
             double pd_c = this->get_PD().get_conditional_pd(systematic, 
                                                             this->get_weights()->get_idiosyncratic());
 
-            return pd_c * (1 - this->get_recovery()->generate_recovery()) * this->m_jtd;
+            return this->m_jtd - this->m_notional * pd_c * this->get_recovery()->generate_recovery();
         }
 
         double cwi = this->get_cwi(factors, 
-                                      idio_id);
+                                   idio_id);
 
         if (cwi > this->get_PD().get_normal_inverse_pd()) return 0;
 
         double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id);
         
         return ((1 - recovery) * this->m_jtd);
+        return this->m_jtd - this->m_notional * recovery;
     }
 
 } // namespace idl
