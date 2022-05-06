@@ -12,134 +12,100 @@ std::string double_to_string(double value)
 }
 
 void ex_distributions(py::module_ &m) {
-    py::class_<idl::distributions::LogNormal>(m, "LogNormal")
-        .def(py::init<double, double>())
+    py::class_<idl::distributions::Distribution, std::shared_ptr<idl::distributions::Distribution>>(m, "Distribution")
+        .def("cdf", py::vectorize(&idl::distributions::Distribution::cdf))
+        .def("pdf", py::vectorize(&idl::distributions::Distribution::pdf))
+        .def("quantile", py::vectorize(&idl::distributions::Distribution::quantile))
+        .def("mean", &idl::distributions::Distribution::mean)
+        .def("__call__", [](idl::distributions::Distribution & object, size_t n, unsigned long seed)
+        {
+            arma::vec output = object(n, seed);
+
+            auto result        = py::array_t<double>(n);
+            auto result_buffer = result.request();
+            double *result_ptr = (double *) result_buffer.ptr;
+
+            // copy std::vector -> py::array 
+            std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
+
+            return result;
+        })
+    ;
+    py::class_<idl::distributions::LogNormal, 
+               idl::distributions::Distribution,
+               std::shared_ptr<idl::distributions::LogNormal>>(m, "LogNormal")
+        .def(py::init<double, double>(), py::arg("mean") = 0, py::arg("sd") = 1)
         .def_property_readonly("mean", &idl::distributions::LogNormal::get_mean)
         .def_property_readonly("sd", &idl::distributions::LogNormal::get_sd)
         .def("__repr__", [](const idl::distributions::LogNormal & object)
         {
-            std::string str("LogNormal(");
-            str.append(double_to_string(object.get_mean()));
-            str.append(", ");
-            str.append(double_to_string(object.get_sd()));
-            str.append(")");
+            std::ostringstream out;
 
-            return str;
-        })
-        .def("cdf", py::vectorize(&idl::distributions::LogNormal::cdf))
-        .def("pdf", py::vectorize(&idl::distributions::LogNormal::pdf))
-        .def("quantile", py::vectorize(&idl::distributions::LogNormal::quantile))
-        .def("__call__", [](idl::distributions::LogNormal & object, size_t n, unsigned long seed)
-        {
-            arma::vec output = object(n, seed);
+            out << "LogNormal("                         <<
+                    double_to_string(object.get_mean()) <<
+                    ", "                                <<
+                    double_to_string(object.get_sd())   <<
+                    ")";
 
-            auto result        = py::array_t<double>(n);
-            auto result_buffer = result.request();
-            double *result_ptr = (double *) result_buffer.ptr;
-
-            // copy std::vector -> py::array 
-            std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
-
-            return result;
+            return out.str();
         })
         ;
-    py::class_<idl::distributions::Uniform>(m, "Uniform")
-        .def(py::init<double, double>())
+    py::class_<idl::distributions::Uniform, idl::distributions::Distribution, std::shared_ptr<idl::distributions::Uniform>>(m, "Uniform")
+        .def(py::init<double, double>(), py::arg("lower") = 0, py::arg("upper") = 1)
         .def_property_readonly("lower", &idl::distributions::Uniform::get_lower)
         .def_property_readonly("upper", &idl::distributions::Uniform::get_upper)
         .def("__repr__", [](const idl::distributions::Uniform & object)
         {
-            std::string str("Uniform(");
-            str.append(double_to_string(object.get_lower()));
-            str.append(", ");
-            str.append(double_to_string(object.get_upper()));
-            str.append(")");
+            std::ostringstream out;
 
-            return str;
-        })
-        .def("cdf", py::vectorize(&idl::distributions::Uniform::cdf))
-        .def("pdf", py::vectorize(&idl::distributions::Uniform::pdf))
-        .def("quantile", py::vectorize(&idl::distributions::Uniform::quantile))
-        .def("__call__", [](idl::distributions::Uniform & object, size_t n, unsigned long seed)
-        {
-            arma::vec output = object(n, seed);
+            out << "Uniform(" <<
+                    double_to_string(object.get_lower());
+                    ", ";
+                    double_to_string(object.get_upper());
+                    ")";
 
-            auto result        = py::array_t<double>(n);
-            auto result_buffer = result.request();
-            double *result_ptr = (double *) result_buffer.ptr;
-
-            // copy std::vector -> py::array 
-            std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
-
-            return result;
+            return out.str();
         })
         ;
-    py::class_<idl::distributions::Normal>(m, "Normal")
-        .def(py::init<double, double>())
+    py::class_<idl::distributions::Normal, idl::distributions::Distribution, std::shared_ptr<idl::distributions::Normal>>(m, "Normal")
+        .def(py::init<double, double>(), py::arg("mean") = 0, py::arg("sd") = 1)
         .def_property_readonly("mean", &idl::distributions::Normal::get_mean)
         .def_property_readonly("sd", &idl::distributions::Normal::get_sd)
         .def("__repr__", [](const idl::distributions::Normal & object)
         {
-            std::string str("Normal(");
-            str.append(double_to_string(object.get_mean()));
-            str.append(", ");
-            str.append(double_to_string(object.get_sd()));
-            str.append(")");
+            std::ostringstream out;
+            
+            out << "Normal("                            <<
+                    double_to_string(object.get_mean()) <<
+                    ", "                                <<
+                    double_to_string(object.get_sd())   <<
+                    ")";
 
-            return str;
-        })
-        .def("cdf", py::vectorize(&idl::distributions::Normal::cdf))
-        .def("pdf", py::vectorize(&idl::distributions::Normal::pdf))
-        .def("quantile", py::vectorize(&idl::distributions::Normal::quantile))
-        .def("__call__", [](idl::distributions::Normal & object, size_t n, unsigned long seed)
-        {
-            arma::vec output = object(n, seed);
-
-            auto result        = py::array_t<double>(n);
-            auto result_buffer = result.request();
-            double *result_ptr = (double *) result_buffer.ptr;
-
-            // copy std::vector -> py::array 
-            std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
-
-            return result;
+            return out.str();
         })
         ;
-    py::class_<idl::distributions::Beta>(m, "Beta")
-        .def(py::init<double, double, double, double>())
+    py::class_<idl::distributions::Beta, idl::distributions::Distribution, std::shared_ptr<idl::distributions::Beta>>(m, "Beta")
+        .def(py::init<double, double, double, double>(), py::arg("shape1") = 0.5,
+        py::arg("shape2") = 0.5, py::arg("a") = 0, py::arg("b") = 1)
         .def_property_readonly("shape1", &idl::distributions::Beta::get_shape1)
         .def_property_readonly("shape2", &idl::distributions::Beta::get_shape2)
         .def_property_readonly("a", &idl::distributions::Beta::get_a)
         .def_property_readonly("b", &idl::distributions::Beta::get_b)
         .def("__repr__", [](const idl::distributions::Beta & object)
         {
-            std::string str("Beta(");
-            str.append(double_to_string(object.get_shape1()));
-            str.append(", ");
-            str.append(double_to_string(object.get_shape1()));
-            str.append(", ");
-            str.append(double_to_string(object.get_a()));
-            str.append(", ");
-            str.append(double_to_string(object.get_b()));
-            str.append(")");
+            std::ostringstream out;
 
-            return str;
-        })
-        .def("cdf", py::vectorize(&idl::distributions::Beta::cdf))
-        .def("pdf", py::vectorize(&idl::distributions::Beta::pdf))
-        .def("quantile", py::vectorize(&idl::distributions::Beta::quantile))
-        .def("__call__", [](idl::distributions::Beta & object, size_t n, unsigned long seed)
-        {
-            arma::vec output = object(n, seed);
+            out << "Beta("                                <<
+                    double_to_string(object.get_shape1()) <<
+                    ", "                                  <<
+                    double_to_string(object.get_shape1()) << 
+                    ", "                                  <<
+                    double_to_string(object.get_a())      <<
+                    ", "                                  <<
+                    double_to_string(object.get_b())      <<
+                    ")";
 
-            auto result        = py::array_t<double>(n);
-            auto result_buffer = result.request();
-            double *result_ptr = (double *) result_buffer.ptr;
-
-            // copy std::vector -> py::array 
-            std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
-
-            return result;
+            return out.str();
         })
         ;
 }

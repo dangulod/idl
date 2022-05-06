@@ -16,8 +16,11 @@ namespace idl
         std::map<WeightsDimension, std::shared_ptr<Weights>> m_weights;
     public:
         Factor() = delete;
-        Factor(int def_rating, int def_region, int def_sector);
-        Factor(WeightsDimension default_weight);
+        Factor(const unsigned int def_rating, 
+               const unsigned int def_region, 
+               const unsigned int def_sector,
+               Weights defautl_weights);
+        Factor(WeightsDimension default_weight, Weights defautl_weights);
         Factor(const Factor & value) = default;
         Factor(Factor && value) = default;
         Factor& operator=(const Factor & value) = delete;
@@ -25,6 +28,7 @@ namespace idl
         ~Factor() = default;
 
         bool operator ==(const Factor &rhs) const;
+        bool operator !=(const Factor &rhs) const;
 
         void add(const WeightsDimension dimension,
                  const Weights weights);
@@ -40,6 +44,7 @@ namespace idl
         size_t get_number_of_factors() const;
 
         std::shared_ptr<Weights> operator[](const WeightsDimension & value);
+        std::shared_ptr<Weights> at(const WeightsDimension & value);
 
         WeightsDimension get_default() const;
 

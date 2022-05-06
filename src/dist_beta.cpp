@@ -19,6 +19,19 @@ namespace idl
                 throw std::invalid_argument("(Beta) a must not be greater than b");
         }
 
+        bool Beta::operator ==(const Beta &rhs) const
+        {
+            return (this->get_shape1() == rhs.get_shape1()) &
+                (this->get_shape2() == rhs.get_shape2()) & 
+                (this->get_a() == rhs.get_a()) & 
+                (this->get_b() == rhs.get_b());
+        }
+
+        bool Beta::operator !=(const Beta &rhs) const
+        {
+            return !((*this) == rhs);
+        }
+
         double Beta::pdf(double x)
         {
             utils::isFinite(x);
@@ -74,6 +87,32 @@ namespace idl
         double Beta::get_b() const
         {
             return this->m_b;
+        }
+
+        double Beta::mean()
+        {
+            double scale = this->m_b - this->m_a;
+            return this->m_shape1 / (this->m_shape2 + this->m_shape1) * scale + this->m_a;
+        }
+
+        pt::ptree Beta::to_ptree()
+        {
+            pt::ptree root;
+
+            root.put("shape1", this->get_shape1());
+            root.put("shape2", this->get_shape2());
+            root.put("a", this->get_a());
+            root.put("b", this->get_b());
+
+            return root;
+        }
+
+        Beta Beta::from_ptree(const pt::ptree & value)
+        {
+            return Beta(value.find("shape1")->second.get_value<double>(),
+                        value.find("shape2")->second.get_value<double>(),
+                        value.find("a")->second.get_value<double>(),
+                        value.find("b")->second.get_value<double>());
         }
 
     } // namespace distributions

@@ -13,6 +13,17 @@ namespace idl
                 throw std::invalid_argument("(LogNormal) Standard Deviation is not a finite or greater than zero");
         }
 
+        bool LogNormal::operator ==(const LogNormal &rhs) const
+        {
+            return (this->get_mean() == rhs.get_mean()) &
+                (this->get_sd() == rhs.get_sd());
+        }
+
+        bool LogNormal::operator !=(const LogNormal &rhs) const
+        {
+            return !((*this) == rhs);
+        }
+
         double LogNormal::cdf(double x)
         {
             utils::isFinite(x);
@@ -64,6 +75,27 @@ namespace idl
         double LogNormal::get_sd() const
         {
             return this->m_sd;
+        }
+
+        pt::ptree LogNormal::to_ptree()
+        {
+            pt::ptree root;
+
+            root.put("mean", this->get_mean());
+            root.put("sd", this->get_sd());
+            
+            return root;
+        }
+
+        double LogNormal::mean()
+        {
+            return this->get_mean();
+        }
+
+        LogNormal LogNormal::from_ptree(const pt::ptree & value)
+        {
+            return LogNormal(value.find("mean")->second.get_value<double>(),
+                             value.find("sd")->second.get_value<double>());
         }
     }
 }

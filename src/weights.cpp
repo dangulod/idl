@@ -58,6 +58,43 @@ namespace idl
         return true;
     }
 
+    bool Weights::operator!=(const Weights &rhs) const
+    {
+        if (this->size() != rhs.size()) return true;
+
+        auto it_this = this->begin();
+        auto it_rhs  = rhs.begin();
+
+        while (it_this != this->end())
+        {
+            if ((*it_this) != (*it_rhs)) return true;
+
+            it_this++; it_rhs++;
+        }
+
+        return false;
+    }
+
+    arma::vec Weights::operator%(const arma::vec & rhs) const
+    {
+        arma::vec output(this->size());
+
+        auto it_weights = this->begin();
+        auto it_rhs     = rhs.begin();
+        auto it_output  = output.begin();
+
+        while (it_output != output.end())
+        {
+            *it_output = (*it_weights) * (*it_rhs);
+            
+            it_output++;
+            it_rhs++;
+            it_weights++;
+        }
+
+        return output;
+    }
+
     double Weights::get_R2()
     {
         return this->m_R2;

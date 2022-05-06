@@ -2,11 +2,20 @@
 
 namespace idl
 {
-    Factor::Factor(int def_rating, int def_region, int def_sector) :
-        m_default(def_rating, def_region, def_sector) { }
+    Factor::Factor(const unsigned int def_rating, 
+                   const unsigned int def_region, 
+                   const unsigned int def_sector,
+                   Weights defautl_weights) :
+        m_default(def_rating, def_region, def_sector) 
+    { 
+        this->add(this->get_default(), defautl_weights);
+    }
 
-    Factor::Factor(WeightsDimension default_weight):
-        m_default(default_weight) { }
+    Factor::Factor(WeightsDimension default_weight, Weights defautl_weights):
+        m_default(default_weight) 
+    { 
+        this->add(this->get_default(), defautl_weights);
+    }
 
     bool Factor::operator ==(const Factor &rhs) const
     {
@@ -26,6 +35,11 @@ namespace idl
         return true;
     }
 
+    bool Factor::operator !=(const Factor &rhs) const
+    {
+        return !((*this) == rhs);
+    }
+
     void Factor::add(const WeightsDimension dimension,
                      const Weights value)
     {
@@ -39,7 +53,7 @@ namespace idl
 
         auto success = this->m_weights.insert(std::make_pair(dimension, std::make_shared<Weights>(value)));
 
-        if (!success.second)
+        if (!success.second & (*((*this)[dimension].get())) != value)
         {
             throw std::invalid_argument("(Factor::add) Key alredy exists in the Factor object");
         }
@@ -97,6 +111,19 @@ namespace idl
         return output->second;
     }
 
+
+    std::shared_ptr<Weights> Factor::at(const WeightsDimension & value)
+    {
+        auto output = this->m_weights.find(value);
+
+        if (output == this->end())
+        {
+            return (*this)[this->get_default()];
+        }
+
+        return output->second;
+    }
+
     WeightsDimension Factor::get_default() const
     {
         return this->m_default;
@@ -121,11 +148,20 @@ namespace idl
     
     Factor Factor::from_ptree(const pt::ptree & value)
     {
-        Factor output(WeightsDimension::from_ptree(value.get_child("default")));
-        
-        pt::ptree::const_assoc_iterator child = value.find("weights");
+        WeightsDimension wd_default = WeightsDimension::from_ptree(value.get_child("default"));
+        Weights w_default({0});
 
-        if (child == value.not_found()) return output;
+        BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("weights"))
+        {
+            pt::ptree weight = ii.second;
+            
+            if (wd_default == WeightsDimension::from_string(ii.first))
+            {
+                w_default = Weights::from_ptree(weight);
+            }
+        }
+
+        Factor output(wd_default, w_default);
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("weights"))
         {

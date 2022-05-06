@@ -12,6 +12,17 @@ namespace idl
                 throw std::invalid_argument("(Normal) Standard Deviation is not a finite or greater than zero");
         }
 
+        bool Normal::operator ==(const Normal &rhs) const
+        {
+            return (this->get_mean() == rhs.get_mean()) &
+                (this->get_sd() == rhs.get_sd());
+        }
+
+        bool Normal::operator !=(const Normal &rhs) const
+        {
+            return !((*this) == rhs);
+        }
+
         double Normal::cdf(double x)
         {
             utils::isFinite(x);
@@ -61,5 +72,27 @@ namespace idl
         {
             return this->m_sd;
         }
+
+        pt::ptree Normal::to_ptree()
+        {
+            pt::ptree root;
+
+            root.put("mean", this->get_mean());
+            root.put("sd", this->get_sd());
+            
+            return root;
+        }
+
+        double Normal::mean()
+        {
+            return this->get_mean();
+        }
+
+        Normal Normal::from_ptree(const pt::ptree & value)
+        {
+            return Normal(value.find("mean")->second.get_value<double>(),
+                          value.find("sd")->second.get_value<double>());
+        }
+
     } // namespace distributions
 } // namespace idl

@@ -1,23 +1,40 @@
-#include <idl/portfolio.h>
+#include <idl/portfolio/portfolio.h>
 
 namespace idl
 {
-    Portfolio::Portfolio(Factor factor) :
-        m_dist_scenarios(idl::distributions::Normal(0, 1)), m_factor(factor) { }
-
-    void Portfolio::operator+(Counterparty & value)
-    {
-        this->m_counterparty.push_back(value);
+    Portfolio::Portfolio(Factor factor,
+                         IDLParams idlparams) :
+        m_factor(factor), m_idlparams(idlparams)
+    { 
+        
     }
 
-    void Portfolio::operator+(Counterparty && value)
+    void Portfolio::add_position(std::string id,
+                                 std::shared_ptr<Position> value)
     {
-        this->m_counterparty.push_back(std::move(value));
+        value->set_PD(this->get_IDLParams().get_default_probability("SOV", 
+                                                                    value->get_rating()));
+        value->set_recovery(this->get_IDLParams().get_recovery("all"));
+        value->set_weights(this->get_factor().at(value->get_weight_dimension()));
+
+        auto success = this->m_position.insert(std::make_pair(id, value));
+
+        if (!success.second)
+        {
+            throw std::invalid_argument("(Portfolio::add_position) Key alredy exists in the Portfolio object");
+        }
     }
 
-    Counterparty & Portfolio::operator[](const size_t index)
+    std::shared_ptr<Position> Portfolio::operator[](const std::string id)
     {
-        return this->m_counterparty.at(index);
+        auto output = this->m_position.find(id);
+
+        if (output == this->end())
+        {
+            throw std::out_of_range("(Portfolio[]) key does not exists");
+        }
+
+        return output->second;
     }
 
     pt::ptree Portfolio::to_ptree()
@@ -25,21 +42,24 @@ namespace idl
         pt::ptree root;
 
         root.add_child("factor", this->get_factor().to_ptree());
+        root.add_child("IDLParams", this->get_IDLParams().to_ptree());
 
         pt::ptree counterparties;
 
         for (const auto & ii: *this)
         {
-            counterparties.push_back(std::make_pair("", ii.to_ptree()));
+            counterparties.push_back(std::make_pair(ii.first, ii.second->to_ptree()));
         }
 
         root.add_child("counterparties", counterparties);
         
         return root;
     }
+
     Portfolio Portfolio::from_ptree(const pt::ptree & value)
     {
-        Portfolio output(Factor::from_ptree(value.get_child("factor")));
+        Portfolio output(Factor::from_ptree(value.get_child("factor")),
+                         IDLParams::from_ptree(value.get_child("IDLParams")));
 
         pt::ptree::const_assoc_iterator child = value.find("counterparties");
 
@@ -47,46 +67,46 @@ namespace idl
 
         BOOST_FOREACH(const pt::ptree::value_type & ii, value.get_child("counterparties"))
         {
-            pt::ptree counterparty = ii.second;
-            output + Counterparty::from_ptree(counterparty);
+            output.add_position(ii.first,
+                                std::make_shared<Position>(Position::from_ptree(ii.second)));
         }
 
         return output;
     }
 
-    std::vector<Counterparty>::iterator Portfolio::begin()
+    std::map<std::string, std::shared_ptr<Position>>::iterator Portfolio::begin()
     {
-        return this->m_counterparty.begin();
+        return this->m_position.begin();
     }
 
-    std::vector<Counterparty>::iterator Portfolio::end()
+    std::map<std::string, std::shared_ptr<Position>>::iterator Portfolio::end()
     {
-        return this->m_counterparty.end();
+        return this->m_position.end();
     }
 
-    std::vector<Counterparty>::const_iterator Portfolio::cbegin() const
+    std::map<std::string, std::shared_ptr<Position>>::const_iterator Portfolio::cbegin() const
     {
-        return this->m_counterparty.cbegin();
+        return this->m_position.cbegin();
     }
 
-    std::vector<Counterparty>::const_iterator Portfolio::cend() const
+    std::map<std::string, std::shared_ptr<Position>>::const_iterator Portfolio::cend() const
     {
-        return this->m_counterparty.end();
+        return this->m_position.end();
     }
 
-    std::vector<Counterparty>::const_iterator Portfolio::begin() const
+    std::map<std::string, std::shared_ptr<Position>>::const_iterator Portfolio::begin() const
     {
-        return this->m_counterparty.begin();
+        return this->m_position.begin();
     }
 
-    std::vector<Counterparty>::const_iterator Portfolio::end() const
+    std::map<std::string, std::shared_ptr<Position>>::const_iterator Portfolio::end() const
     {
-        return this->m_counterparty.end();
+        return this->m_position.end();
     }
 
     size_t Portfolio::size() const
     {
-        return this->m_counterparty.size();
+        return this->m_position.size();
     }
 
     size_t Portfolio::get_number_of_factors()
@@ -112,16 +132,47 @@ namespace idl
         return this->m_factor;
     }
 
-    void Portfolio::v_rand(arma::mat *r, size_t n, size_t seed, size_t id, size_t n_threads)
+    IDLParams & Portfolio::get_IDLParams() 
+    {
+        return this->m_idlparams;
+    }
+
+    arma::mat Portfolio::correlation_sructure()
+    {
+        arma::mat m(this->size(), this->get_number_of_factors());
+        size_t kk = 0;
+
+        for (auto &it_weights: this->m_position)
+        {
+            m.row(kk) = it_weights.second->get_weights()->t();
+            kk++;
+        }
+
+        arma::mat cor_stru = (m * m.t());
+
+        cor_stru.diag().ones();
+
+        return cor_stru;
+    }
+
+    void Portfolio::v_rand(arma::mat *r,
+                           size_t n,
+                           size_t seed,
+                           size_t id,
+                           size_t n_threads)
     {
         while (id < n)
         {
-            r->row(id) = this->m_dist_scenarios(this->get_number_of_factors(), seed + id).t();
+            r->row(id) = static_distributions::dist_normal(generator::factors, 
+                                                           this->get_number_of_factors(), 
+                                                           seed + id).t();
             id += n_threads;
         }
     }
 
-    arma::mat Portfolio::get_scenarios(size_t n, size_t seed, size_t n_threads)
+    arma::mat Portfolio::get_scenarios(size_t n,
+                                       size_t seed,
+                                       size_t n_threads)
     {
         arma::mat rand = arma::zeros(n, this->get_number_of_factors());
 
@@ -129,7 +180,13 @@ namespace idl
 
         for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
         {
-            v_threads.at(it_thread) = std::thread(&Portfolio::v_rand, this, &rand, n, seed, it_thread, n_threads);
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_rand,
+                                                  this,
+                                                  &rand,
+                                                  n,
+                                                  seed,
+                                                  it_thread,
+                                                  n_threads);
         }
 
         for (auto & ii: v_threads)
@@ -140,4 +197,296 @@ namespace idl
         return rand;
     }
 
+    arma::vec Portfolio::getCWI(arma::vec f,
+                                size_t idio_id)
+    {
+        arma::vec output(this->size());
+
+        auto it_position = this->begin();
+        auto it_output   = output.begin();
+
+        while (it_position != this->end())
+        {
+            (*it_output) = it_position->second->get_cwi(f,
+                                                        idio_id);
+            it_position++;
+            it_output++;
+        }
+
+        return output;
+    }
+
+    arma::vec Portfolio::getCWI(size_t seed,
+                                size_t idio_id)
+    {
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
+        return this->getCWI(f, idio_id);
+    }
+
+    void Portfolio::v_cwi(arma::mat *r,
+                          size_t n,
+                          size_t seed,
+                          size_t id,
+                          size_t n_threads)
+    {
+        while (id < n)
+        {
+            r->row(id) = this->getCWI(seed + id, id).t();
+            id += n_threads;
+        }
+    }
+
+    arma::mat Portfolio::get_CWIs(size_t n,
+                                  size_t seed,
+                                  size_t n_threads)
+    {
+        arma::mat cwi = arma::zeros(n, this->size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_cwi,
+                                                  this,
+                                                  &cwi,
+                                                  n,
+                                                  seed,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return cwi;
+    }
+    
+    arma::vec Portfolio::component_loss(arma::vec f, 
+                                        size_t idio_id, 
+                                        bool diversification)
+    {
+        arma::vec output(this->size());
+
+        auto it_position = this->begin();
+        auto it_output   = output.begin();
+        
+        while (it_position != this->end())
+        {
+            *it_output = it_position->second->loss(f,
+                                                   idio_id,
+                                                   diversification);
+            
+            it_position++;
+            it_output++;
+        }
+
+        return output;
+    }
+
+    arma::vec Portfolio::id_component_loss(arma::mat *r,
+                                           size_t seed,
+                                           bool diversification,
+                                           size_t id)
+    {
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
+        return this->component_loss(f, id, diversification);
+    }
+
+    void Portfolio::v_component_loss(arma::mat *r,
+                                     size_t n,
+                                     size_t seed,
+                                     bool diversification,
+                                     size_t id,
+                                     size_t n_threads)
+    {
+        while (id < n)
+        {
+            r->row(id) = this->id_component_loss(r,
+                                                 seed,
+                                                 diversification,
+                                                 id).t();
+            id += n_threads;
+        }
+    }
+
+    void Portfolio::v_component_loss_scen(arma::mat *r, 
+                                          std::vector<size_t> scenarios_ids, 
+                                          size_t seed, 
+                                          bool diversification,
+                                          size_t id,
+                                          size_t n_threads)
+    {
+        while (id < scenarios_ids.size())
+        {
+            r->row(id) = this->id_component_loss(r,
+                                                 seed,
+                                                 diversification,
+                                                 scenarios_ids.at(id)).t();
+            id += n_threads;
+        }
+    }
+
+    arma::mat Portfolio::component_loss(size_t n,
+                                        size_t seed,
+                                        bool diversification,
+                                        size_t n_threads)
+    {
+        arma::mat loss = arma::zeros(n, this->size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_component_loss,
+                                                  this,
+                                                  &loss,
+                                                  n,
+                                                  seed,
+                                                  diversification,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+
+    arma::mat Portfolio::component_loss(std::vector<size_t> scenarios_ids,
+                                        size_t seed, 
+                                        bool diversification, 
+                                        size_t n_threads)
+    {
+        arma::mat loss = arma::zeros(scenarios_ids.size(), this->size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_component_loss_scen,
+                                                  this,
+                                                  &loss,
+                                                  scenarios_ids,
+                                                  seed,
+                                                  diversification,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+
+    double Portfolio::id_total_loss(arma::mat *r,
+                                    size_t seed,
+                                    bool diversification,
+                                    size_t id)
+    {
+        arma::vec f = static_distributions::dist_normal(generator::factors, 
+                                                        this->get_number_of_factors(), 
+                                                        seed);
+        return arma::accu(this->component_loss(f, id, diversification));
+    }
+    
+    void Portfolio::v_total_loss(arma::mat *r,
+                                 size_t n,
+                                 size_t seed,
+                                 bool diversification,
+                                 size_t id,
+                                 size_t n_threads)
+    {
+        while (id < n)
+        {
+            r->at(id) = this->id_total_loss(r, seed, diversification, id);
+            id += n_threads;
+        }
+    }
+
+    void Portfolio::v_total_loss_scen(arma::mat *r,
+                                      std::vector<size_t> scenarios_ids, 
+                                      size_t seed,
+                                      bool diversification,
+                                      size_t id,
+                                      size_t n_threads)
+    {
+        while (id < scenarios_ids.size())
+        {
+            r->at(id) = this->id_total_loss(r,
+                                            seed,
+                                            diversification,
+                                            scenarios_ids.at(id));
+            id += n_threads;
+        }
+    }
+
+    arma::vec Portfolio::total_loss(size_t n,
+                                    size_t seed,
+                                    bool diversification,
+                                    size_t n_threads)
+    {
+        arma::vec loss = arma::zeros(n);
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss,
+                                                  this,
+                                                  &loss,
+                                                  n,
+                                                  seed,
+                                                  diversification,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
+
+    arma::vec Portfolio::total_loss(std::vector<size_t> scenarios_ids,
+                                    size_t seed,
+                                    bool diversification,
+                                    size_t n_threads)
+    {
+        arma::vec loss = arma::zeros(scenarios_ids.size());
+
+        std::vector<std::thread> v_threads(n_threads);
+
+        for (size_t it_thread = 0; it_thread < n_threads; it_thread ++)
+        {
+            v_threads.at(it_thread) = std::thread(&Portfolio::v_total_loss_scen,
+                                                  this,
+                                                  &loss,
+                                                  scenarios_ids,
+                                                  seed,
+                                                  diversification,
+                                                  it_thread,
+                                                  n_threads);
+        }
+
+        for (auto & ii: v_threads)
+        {
+            ii.join();
+        }
+
+        return loss;
+    }
 }

@@ -1,4 +1,4 @@
-#include <idl/default/ratingPD.h>
+#include <idl/risk_params/ratingPD.h>
 
 namespace idl
 {
@@ -12,32 +12,32 @@ namespace idl
         return this->m_ratings.size();
     }
 
-    std::map<unsigned int, double>::iterator RatingPD::begin()
+    std::map<unsigned int, PD>::iterator RatingPD::begin()
     {
         return this->m_ratings.begin();
     }
 
-    std::map<unsigned int, double>::iterator RatingPD::end()
+    std::map<unsigned int, PD>::iterator RatingPD::end()
     {
         return this->m_ratings.end();
     }
 
-    std::map<unsigned int, double>::const_iterator RatingPD::cbegin() const
+    std::map<unsigned int, PD>::const_iterator RatingPD::cbegin() const
     {
         return this->m_ratings.cbegin();
     }
 
-    std::map<unsigned int, double>::const_iterator RatingPD::cend() const
+    std::map<unsigned int, PD>::const_iterator RatingPD::cend() const
     {
         return this->m_ratings.end();
     }
 
-    std::map<unsigned int, double>::const_iterator RatingPD::begin() const
+    std::map<unsigned int, PD>::const_iterator RatingPD::begin() const
     {
         return this->m_ratings.begin();
     }
 
-    std::map<unsigned int, double>::const_iterator RatingPD::end() const
+    std::map<unsigned int, PD>::const_iterator RatingPD::end() const
     {
         return this->m_ratings.end();
     }
@@ -48,15 +48,15 @@ namespace idl
     {
         idl::utils::isProbability(default_probability);
         
-        auto success = this->m_ratings.insert(std::make_pair(rating, default_probability));
+        auto success = this->m_ratings.insert(std::make_pair(rating, PD(default_probability)));
 
-        if (!success.second)
+        if (!success.second & ((*this)[rating].get_pd() != default_probability))
         {
             throw std::invalid_argument("(RatingPD::add) Key already exists in the RatingPD object");
         }
     }
 
-    double RatingPD::operator[](const unsigned int rating) const
+    PD RatingPD::operator[](const unsigned int rating) const
     {
         auto output = this->m_ratings.find(rating);
 
@@ -76,7 +76,7 @@ namespace idl
 
         for (const auto & ii: *this)
         {
-            ratings.put(std::to_string(ii.first), ii.second);
+            ratings.put(std::to_string(ii.first), ii.second.get_pd());
         }
 
         root.add_child("ratings", ratings);

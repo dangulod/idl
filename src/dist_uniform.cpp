@@ -15,6 +15,17 @@ namespace idl
                 throw std::invalid_argument("(Uniform) lower is greater than upper");
         }
 
+        bool Uniform::operator ==(const Uniform &rhs) const
+        {
+            return (this->get_lower() == rhs.get_lower()) &
+                (this->get_upper() == rhs.get_upper());
+        }
+
+        bool Uniform::operator !=(const Uniform &rhs) const
+        {
+            return !((*this) == rhs);
+        }
+
         double Uniform::cdf(double x)
         {
             utils::isFinite(x);
@@ -50,6 +61,27 @@ namespace idl
         double Uniform::get_upper() const
         {
             return this->m_upper;
+        }
+
+        pt::ptree Uniform::to_ptree()
+        {
+            pt::ptree root;
+
+            root.put("lower", this->get_lower());
+            root.put("upper", this->get_upper());
+            
+            return root;
+        }
+
+        double Uniform::mean()
+        {
+            return (this->m_lower + this->m_upper) / 2;
+        }
+
+        Uniform Uniform::from_ptree(const pt::ptree & value)
+        {
+            return Uniform(value.find("lower")->second.get_value<double>(),
+                           value.find("upper")->second.get_value<double>());
         }
     }
 }
