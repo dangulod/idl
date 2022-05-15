@@ -34,48 +34,38 @@ void ex_portfolio(py::module_ &m) {
 
             return out.str();
         })
+        .def("keys", [](const idl::Portfolio & object)
+        {
+            return py::make_key_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("__iter__", [](const idl::Portfolio & object)
+        {
+            return py::make_value_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("items", [](const idl::Portfolio & object)
+        {
+            return py::make_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("values", [](const idl::Portfolio & object)
+        {
+            return py::make_value_iterator(object.begin(), object.end()); 
+        }, py::keep_alive<0, 1>())
         .def("get_correlation_structure", &idl::Portfolio::correlation_sructure)
         .def("get_scenarios", &idl::Portfolio::get_scenarios, 
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
         .def("get_CWIs", &idl::Portfolio::get_CWIs, 
             py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<size_t, size_t, bool, size_t>(&idl::Portfolio::component_loss), 
-            py::arg("n"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, bool, size_t>(&idl::Portfolio::component_loss), 
-            py::arg("scenarios_ids"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<size_t, size_t, bool, size_t>(&idl::Portfolio::total_loss), 
-            py::arg("n"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, bool, size_t>(&idl::Portfolio::total_loss), 
-            py::arg("scenarios_ids"), py::arg("seed"), py::arg("div_threshold") = 0, py::arg("n_threads") = std::thread::hardware_concurrency())
-        ;
-    py::class_<idl::Position, std::shared_ptr<idl::Position>>(m, "Position")
-        .def(py::init<const double &, const double &, const unsigned &, const unsigned &, const unsigned &, size_t &>())
-        .def(py::init<const double &, const double &, idl::WeightsDimension &, size_t &>())
-        .def("__eq__", &idl::Position::operator==)
-        .def_property_readonly("jtd", &idl::Position::get_jtd)
-        .def_property_readonly("notional", &idl::Position::get_notional)
-        .def_property_readonly("weight_dimension", &idl::Position::get_weight_dimension)
-        .def_property_readonly("rating", &idl::Position::get_rating)
-        .def_property_readonly("region", &idl::Position::get_region)
-        .def_property_readonly("sector", &idl::Position::get_sector)
-        .def_property_readonly("idio_seed", &idl::Position::get_idio_seed)
-        .def("__repr__", [](const idl::Position & object)
-        {
-            std::ostringstream out;
-
-            out << "[" <<
-                    double_to_string(object.get_jtd())      <<
-                    ", "                                    <<
-                    double_to_string(object.get_notional()) <<
-                    ", "                                    <<
-                    std::to_string(object.get_rating())     <<
-                    ", "                                    <<
-                    std::to_string(object.get_region())     <<
-                    ", "                                    <<
-                    std::to_string(object.get_sector())     <<
-                    "]";
-
-            return out.str();
-        })
+        .def("component_loss", py::overload_cast<size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
+            py::arg("n"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+            py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
+            py::arg("scenarios_ids"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+            py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("total_loss", py::overload_cast<size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
+            py::arg("n"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+            py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
+            py::arg("scenarios_ids"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+            py::arg("n_threads") = std::thread::hardware_concurrency())
         ;
 }

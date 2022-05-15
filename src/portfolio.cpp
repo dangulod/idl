@@ -267,7 +267,8 @@ namespace idl
     
     arma::vec Portfolio::component_loss(arma::vec f, 
                                         size_t idio_id, 
-                                        bool diversification)
+                                        bool diversification,
+                                        bool hedge)
     {
         arma::vec output(this->size());
 
@@ -278,7 +279,8 @@ namespace idl
         {
             *it_output = it_position->second->loss(f,
                                                    idio_id,
-                                                   diversification);
+                                                   diversification,
+                                                   hedge);
             
             it_position++;
             it_output++;
@@ -290,18 +292,20 @@ namespace idl
     arma::vec Portfolio::id_component_loss(arma::mat *r,
                                            size_t seed,
                                            bool diversification,
+                                           bool hedge,
                                            size_t id)
     {
         arma::vec f = static_distributions::dist_normal(generator::factors, 
                                                         this->get_number_of_factors(), 
                                                         seed);
-        return this->component_loss(f, id, diversification);
+        return this->component_loss(f, id, diversification, hedge);
     }
 
     void Portfolio::v_component_loss(arma::mat *r,
                                      size_t n,
                                      size_t seed,
                                      bool diversification,
+                                     bool hedge,
                                      size_t id,
                                      size_t n_threads)
     {
@@ -310,6 +314,7 @@ namespace idl
             r->row(id) = this->id_component_loss(r,
                                                  seed,
                                                  diversification,
+                                                 hedge,
                                                  id).t();
             id += n_threads;
         }
@@ -319,6 +324,7 @@ namespace idl
                                           std::vector<size_t> scenarios_ids, 
                                           size_t seed, 
                                           bool diversification,
+                                          bool hedge,
                                           size_t id,
                                           size_t n_threads)
     {
@@ -327,6 +333,7 @@ namespace idl
             r->row(id) = this->id_component_loss(r,
                                                  seed,
                                                  diversification,
+                                                 hedge,
                                                  scenarios_ids.at(id)).t();
             id += n_threads;
         }
@@ -335,6 +342,7 @@ namespace idl
     arma::mat Portfolio::component_loss(size_t n,
                                         size_t seed,
                                         bool diversification,
+                                        bool hedge,
                                         size_t n_threads)
     {
         arma::mat loss = arma::zeros(n, this->size());
@@ -349,6 +357,7 @@ namespace idl
                                                   n,
                                                   seed,
                                                   diversification,
+                                                  hedge,
                                                   it_thread,
                                                   n_threads);
         }
@@ -363,7 +372,8 @@ namespace idl
 
     arma::mat Portfolio::component_loss(std::vector<size_t> scenarios_ids,
                                         size_t seed, 
-                                        bool diversification, 
+                                        bool diversification,
+                                        bool hedge, 
                                         size_t n_threads)
     {
         arma::mat loss = arma::zeros(scenarios_ids.size(), this->size());
@@ -378,6 +388,7 @@ namespace idl
                                                   scenarios_ids,
                                                   seed,
                                                   diversification,
+                                                  hedge,
                                                   it_thread,
                                                   n_threads);
         }
@@ -393,24 +404,26 @@ namespace idl
     double Portfolio::id_total_loss(arma::mat *r,
                                     size_t seed,
                                     bool diversification,
+                                    bool hedge,
                                     size_t id)
     {
         arma::vec f = static_distributions::dist_normal(generator::factors, 
                                                         this->get_number_of_factors(), 
                                                         seed);
-        return arma::accu(this->component_loss(f, id, diversification));
+        return arma::accu(this->component_loss(f, id, diversification, hedge));
     }
     
     void Portfolio::v_total_loss(arma::mat *r,
                                  size_t n,
                                  size_t seed,
                                  bool diversification,
+                                 bool hedge,
                                  size_t id,
                                  size_t n_threads)
     {
         while (id < n)
         {
-            r->at(id) = this->id_total_loss(r, seed, diversification, id);
+            r->at(id) = this->id_total_loss(r, seed, diversification, hedge, id);
             id += n_threads;
         }
     }
@@ -419,6 +432,7 @@ namespace idl
                                       std::vector<size_t> scenarios_ids, 
                                       size_t seed,
                                       bool diversification,
+                                      bool hedge,
                                       size_t id,
                                       size_t n_threads)
     {
@@ -427,6 +441,7 @@ namespace idl
             r->at(id) = this->id_total_loss(r,
                                             seed,
                                             diversification,
+                                            hedge,
                                             scenarios_ids.at(id));
             id += n_threads;
         }
@@ -435,6 +450,7 @@ namespace idl
     arma::vec Portfolio::total_loss(size_t n,
                                     size_t seed,
                                     bool diversification,
+                                    bool hedge,
                                     size_t n_threads)
     {
         arma::vec loss = arma::zeros(n);
@@ -449,6 +465,7 @@ namespace idl
                                                   n,
                                                   seed,
                                                   diversification,
+                                                  hedge,
                                                   it_thread,
                                                   n_threads);
         }
@@ -464,6 +481,7 @@ namespace idl
     arma::vec Portfolio::total_loss(std::vector<size_t> scenarios_ids,
                                     size_t seed,
                                     bool diversification,
+                                    bool hedge,
                                     size_t n_threads)
     {
         arma::vec loss = arma::zeros(scenarios_ids.size());
@@ -478,6 +496,7 @@ namespace idl
                                                   scenarios_ids,
                                                   seed,
                                                   diversification,
+                                                  hedge,
                                                   it_thread,
                                                   n_threads);
         }

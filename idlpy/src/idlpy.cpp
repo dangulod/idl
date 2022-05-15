@@ -14,6 +14,7 @@ std::string double_to_string(double value);
 void ex_distributions(py::module_ &);
 void ex_factor(py::module_ &);
 void ex_portfolio(py::module_ &);
+void ex_position(py::module_ &);
 void ex_arma(py::module_ &);
 void ex_risk_params(py::module_ &);
 
@@ -21,6 +22,7 @@ PYBIND11_MODULE(_idlpy, m) {
     ex_distributions(m);
     ex_factor(m);
     ex_portfolio(m);
+    ex_position(m);
     ex_arma(m);
     ex_risk_params(m);
     

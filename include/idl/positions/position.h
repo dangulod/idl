@@ -6,15 +6,18 @@
 #include <idl/risk_params/recovery.h>
 #include <idl/weights/weights.h>
 #include <idl/rnd_generator.h>
+#include <idl/positions/hedge.h>
 
 namespace idl
 {
     class Position: public std::enable_shared_from_this<Position>
     {
     private:
-        double m_jtd, m_notional;
+        double m_jtd, m_jtd_unhedged, m_notional, m_notional_unhedged;
         size_t m_idio_seed;
         WeightsDimension m_weight_dimension;
+
+        std::vector<std::shared_ptr<Hedge>> m_hedges;
 
         // Set when added to a portfolio
         PD m_pd;
@@ -24,22 +27,28 @@ namespace idl
     public:
         Position() = delete;
         Position(double jtd, double notional, unsigned int rating, unsigned int region, unsigned int sector,
-                 size_t idio_seed);
-        Position(double jtd, double notional, WeightsDimension w_dim, size_t idio_seed);
+                 size_t idio_seed, std::vector<std::shared_ptr<Hedge>> hedges = {});
+        Position(double jtd, double notional, WeightsDimension w_dim, size_t idio_seed,
+                 std::vector<std::shared_ptr<Hedge>> hedges = {});
         ~Position() = default;
 
         bool operator ==(const Position &rhs) const;
 
+        Position operator+(std::shared_ptr<Hedge> &value);
+        void operator+=(std::shared_ptr<Hedge> &value);
+
         pt::ptree to_ptree() const;
         static Position from_ptree(const pt::ptree & value);
 
-        double get_jtd() const;
-        double get_notional() const;
+        double get_jtd(bool hedged = true) const;
+        double get_notional(bool hedged = true) const;
         size_t get_idio_seed() const;
         WeightsDimension get_weight_dimension() const;
         unsigned int get_rating() const;
         unsigned int get_region() const;
         unsigned int get_sector() const;
+
+        std::vector<std::shared_ptr<Hedge>> get_hedges() const;
 
         PD get_PD() const;
         void set_PD(const PD value);
@@ -56,9 +65,10 @@ namespace idl
 
         double loss(arma::vec factors, 
                     size_t idio_id,
-                    bool diversification);
+                    bool diversification = false,
+                    bool hedge = true);
     };
-    
+
 } // namespace idl
 
 #endif

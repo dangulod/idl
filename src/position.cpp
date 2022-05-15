@@ -4,22 +4,36 @@ namespace idl
 {
     Position::Position(double jtd, double notional,
         unsigned int rating, unsigned int region, 
-        unsigned int sector, size_t idio_seed): 
-        m_jtd(jtd), m_notional(notional),
+        unsigned int sector, size_t idio_seed,
+        std::vector<std::shared_ptr<Hedge>> hedges): 
+        m_jtd(jtd), m_jtd_unhedged(jtd), m_notional(notional),
+        m_notional_unhedged(notional),
         m_weight_dimension(rating, region, sector),
         m_idio_seed(idio_seed), m_pd(0), 
         m_recovery(std::shared_ptr<Recovery>(nullptr)),
         m_weights(std::shared_ptr<Weights>(nullptr))
-    { }
+    {
+        for (auto & it_hedges: hedges)
+        {
+            (*this) += it_hedges;
+        }
+    }
 
     Position::Position(double jtd, double notional,
-        WeightsDimension w_dim, size_t idio_seed):
-        m_jtd(jtd), m_notional(notional), m_weight_dimension(w_dim),
+        WeightsDimension w_dim, size_t idio_seed,
+        std::vector<std::shared_ptr<Hedge>> hedges):
+        m_jtd(jtd), m_jtd_unhedged(jtd), m_notional(notional),
+        m_notional_unhedged(notional), m_weight_dimension(w_dim),
         m_idio_seed(idio_seed),
         m_pd(0), 
         m_recovery(std::shared_ptr<Recovery>(nullptr)),
         m_weights(std::shared_ptr<Weights>(nullptr))
-    { }
+    {
+        for (auto & it_hedges: hedges)
+        {
+            (*this) += it_hedges;
+        }
+    }
 
     bool Position::operator ==(const Position &rhs) const
     {
@@ -28,6 +42,21 @@ namespace idl
             (this->get_rating() == rhs.get_rating()) &
             (this->get_region() == rhs.get_region()) &
             (this->get_sector() == rhs.get_sector());
+    }
+
+    Position Position::operator+(std::shared_ptr<Hedge> &rhs)
+    {
+        this->m_jtd      += rhs->get_jtd();
+        this->m_notional += rhs->get_notional();
+        this->m_hedges.push_back(rhs);
+        return *this;
+    }
+    
+    void Position::operator+=(std::shared_ptr<Hedge> &rhs)
+    {
+        this->m_jtd      += rhs->get_jtd();
+        this->m_notional += rhs->get_notional();
+        this->m_hedges.push_back(rhs);
     }
 
     pt::ptree Position::to_ptree() const
@@ -51,14 +80,29 @@ namespace idl
                         value.find("idio_seed")->second.get_value<size_t>());
     }
 
-    double Position::get_jtd() const
+    double Position::get_jtd(bool hedged) const
     {
-        return this->m_jtd;
+        if (hedged)
+        {
+            return this->m_jtd;
+        }
+
+        return this->m_jtd_unhedged;
     }
 
-    double Position::get_notional() const
+    double Position::get_notional(bool hedged) const
     {
-        return this->m_notional;
+        if (hedged)
+        {
+            return this->m_notional;
+        }
+
+        return this->m_notional_unhedged;
+    }
+
+    std::vector<std::shared_ptr<Hedge>> Position::get_hedges() const
+    {
+        return this->m_hedges;
     }
 
     size_t Position::get_idio_seed() const
@@ -141,7 +185,8 @@ namespace idl
 
     double Position::loss(arma::vec factors, 
                           size_t idio_id,
-                          bool diversification)
+                          bool diversification,
+                          bool hedge)
     {
         if (diversification)
         {
@@ -150,7 +195,7 @@ namespace idl
             double pd_c = this->get_PD().get_conditional_pd(systematic, 
                                                             this->get_weights()->get_idiosyncratic());
 
-            return this->m_jtd - this->m_notional * pd_c * this->get_recovery()->generate_recovery();
+            return this->get_jtd(hedge) - this->get_notional(hedge) * pd_c * this->get_recovery()->generate_recovery();
         }
 
         double cwi = this->get_cwi(factors, 
@@ -160,8 +205,7 @@ namespace idl
 
         double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id);
         
-        return ((1 - recovery) * this->m_jtd);
-        return this->m_jtd - this->m_notional * recovery;
+        return this->get_jtd(hedge) - this->get_notional(hedge) * recovery;
     }
 
 } // namespace idl

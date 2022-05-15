@@ -30,34 +30,40 @@ namespace idl
                               size_t n,
                               size_t seed,
                               bool diversification,
+                              bool hedge,
                               size_t id,
                               size_t n_threads);
         void v_component_loss_scen(arma::mat *r,
                                    std::vector<size_t> scenarios_ids,
                                    size_t seed,
                                    bool diversification,
+                                   bool hedge,
                                    size_t id,
                                    size_t n_threads);
         void v_total_loss(arma::mat *r,
                           size_t n,
                           size_t seed,
                           bool diversification,
+                          bool hedge,
                           size_t id,
                           size_t n_threads);
         void v_total_loss_scen(arma::mat *r,
                                std::vector<size_t> scenarios_ids,
                                size_t seed,
                                bool diversification,
+                               bool hedge,
                                size_t id,
                                size_t n_threads);
 
         arma::vec id_component_loss(arma::mat *r,
                                     size_t seed,
                                     bool diversification,
+                                    bool hedge,
                                     size_t id);
         double id_total_loss(arma::mat *r,
                              size_t seed,
                              bool diversification,
+                             bool hedge,
                              size_t id);
 
     public:
@@ -105,22 +111,27 @@ namespace idl
 
         arma::vec component_loss(arma::vec f,
                                  size_t idio_id,
-                                 bool diversification = false);
+                                 bool diversification = false,
+                                 bool hedge = true);
         arma::mat component_loss(size_t n,
                                  size_t seed,
                                  bool diversification = false,
+                                 bool hedge = true,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::mat component_loss(std::vector<size_t> scenarios_ids,
                                  size_t seed,
                                  bool diversification = false,
+                                 bool hedge = true,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(size_t n,
                              size_t seed,
                              bool diversification = false,
+                             bool hedge = true,
                              size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(std::vector<size_t> scenarios_ids,
                              size_t seed,
                              bool diversification = false,
+                             bool hedge = true,
                              size_t n_threads = std::thread::hardware_concurrency());
     };
     
