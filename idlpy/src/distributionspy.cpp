@@ -34,15 +34,15 @@ void ex_distributions(py::module_ &m) {
     py::class_<idl::distributions::LogNormal, 
                idl::distributions::Distribution,
                std::shared_ptr<idl::distributions::LogNormal>>(m, "LogNormal")
-        .def(py::init<double, double>(), py::arg("mean") = 0, py::arg("sd") = 1)
-        .def_property_readonly("mean", &idl::distributions::LogNormal::get_mean)
+        .def(py::init<double, double>(), py::arg("mu") = 0, py::arg("sd") = 1)
+        .def_property_readonly("mu", &idl::distributions::LogNormal::get_mu)
         .def_property_readonly("sd", &idl::distributions::LogNormal::get_sd)
         .def("__repr__", [](const idl::distributions::LogNormal & object)
         {
             std::ostringstream out;
 
             out << "LogNormal("                         <<
-                    double_to_string(object.get_mean()) <<
+                    double_to_string(object.get_mu()) <<
                     ", "                                <<
                     double_to_string(object.get_sd())   <<
                     ")";
@@ -68,15 +68,15 @@ void ex_distributions(py::module_ &m) {
         })
         ;
     py::class_<idl::distributions::Normal, idl::distributions::Distribution, std::shared_ptr<idl::distributions::Normal>>(m, "Normal")
-        .def(py::init<double, double>(), py::arg("mean") = 0, py::arg("sd") = 1)
-        .def_property_readonly("mean", &idl::distributions::Normal::get_mean)
+        .def(py::init<double, double>(), py::arg("mu") = 0, py::arg("sd") = 1)
+        .def_property_readonly("mu", &idl::distributions::Normal::get_mu)
         .def_property_readonly("sd", &idl::distributions::Normal::get_sd)
         .def("__repr__", [](const idl::distributions::Normal & object)
         {
             std::ostringstream out;
             
             out << "Normal("                            <<
-                    double_to_string(object.get_mean()) <<
+                    double_to_string(object.get_mu()) <<
                     ", "                                <<
                     double_to_string(object.get_sd())   <<
                     ")";

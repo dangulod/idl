@@ -13,10 +13,10 @@ namespace idl
         class LogNormal: public Distribution, std::enable_shared_from_this<LogNormal>
         {
         private:
-            double m_mean, m_sd;
+            double m_mu, m_sd;
         public:
             LogNormal() = delete;
-            LogNormal(double mean, double sd);
+            LogNormal(double mu, double sd);
             ~LogNormal() = default;
 
             bool operator ==(const LogNormal &rhs) const;
@@ -26,7 +26,7 @@ namespace idl
             double pdf(double x);
             double quantile(double p);
 
-            double get_mean() const;
+            double get_mu() const;
             double get_sd() const;
 
             double mean();

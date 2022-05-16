@@ -37,6 +37,18 @@ namespace idl
 
     bool Position::operator ==(const Position &rhs) const
     {
+        if (this->get_hedges().size() != rhs.get_hedges().size()) return false;
+        
+        auto it_hedge_lhs = this->get_hedges().begin();
+        auto it_hedge_rhs = rhs.get_hedges().begin();
+
+        while (it_hedge_lhs != this->get_hedges().end())
+        {
+            if (it_hedge_lhs != it_hedge_rhs) return false;
+            it_hedge_lhs++;
+            it_hedge_rhs++;
+        }
+
         return (this->get_jtd() == rhs.get_jtd()) &
             (this->get_notional() == rhs.get_notional()) &
             (this->get_rating() == rhs.get_rating()) &

@@ -18,10 +18,10 @@ namespace idl
             std::enable_shared_from_this<Normal>
         {
         private:
-            double m_mean, m_sd;
+            double m_mu, m_sd;
         public:
             Normal() = delete;
-            Normal(double mean, double sd);
+            Normal(double mu, double sd);
             ~Normal() = default;
 
             bool operator ==(const Normal &rhs) const;
@@ -31,7 +31,7 @@ namespace idl
             double pdf(double x);
             double quantile(double p);
 
-            double get_mean() const;
+            double get_mu() const;
             double get_sd() const;
 
             double mean();

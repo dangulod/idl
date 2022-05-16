@@ -4,9 +4,9 @@ namespace idl
 {
     namespace distributions
     {
-        Normal::Normal(double mean, double sd): m_mean(mean), m_sd(sd)
+        Normal::Normal(double mu, double sd): m_mu(mu), m_sd(sd)
         {
-            if (std::isfinite(mean) != true) 
+            if (std::isfinite(mu) != true) 
                 throw std::invalid_argument("(Normal) Mean is not finite");
             if (sd <= 0 || (std::isfinite(sd) != true)) 
                 throw std::invalid_argument("(Normal) Standard Deviation is not a finite or greater than zero");
@@ -14,7 +14,7 @@ namespace idl
 
         bool Normal::operator ==(const Normal &rhs) const
         {
-            return (this->get_mean() == rhs.get_mean()) &
+            return (this->get_mu() == rhs.get_mu()) &
                 (this->get_sd() == rhs.get_sd());
         }
 
@@ -28,7 +28,7 @@ namespace idl
             utils::isFinite(x);
 
             double result;
-            double diff = (x - this->m_mean) / (this->m_sd * M_SQRT2);
+            double diff = (x - this->m_mu) / (this->m_sd * M_SQRT2);
             result = boost::math::erfc(-diff) / 2;
             return result;
         }
@@ -37,7 +37,7 @@ namespace idl
         {
             utils::isFinite(x);
 
-            double exponent(x - this->m_mean);
+            double exponent(x - this->m_mu);
             exponent *= -exponent;
             exponent /= 2 * this->m_sd * this->m_sd;
 
@@ -59,13 +59,13 @@ namespace idl
 
             result = -result;
             result *= this->m_sd * M_SQRT2;
-            result += this->m_mean;
+            result += this->m_mu;
             return result;
         }
 
-        double Normal::get_mean() const
+        double Normal::get_mu() const
         {
-            return this->m_mean;
+            return this->m_mu;
         }
 
         double Normal::get_sd() const
@@ -77,7 +77,7 @@ namespace idl
         {
             pt::ptree root;
 
-            root.put("mean", this->get_mean());
+            root.put("mu", this->get_mu());
             root.put("sd", this->get_sd());
             
             return root;
@@ -85,12 +85,12 @@ namespace idl
 
         double Normal::mean()
         {
-            return this->get_mean();
+            return this->get_mu();
         }
 
         Normal Normal::from_ptree(const pt::ptree & value)
         {
-            return Normal(value.find("mean")->second.get_value<double>(),
+            return Normal(value.find("mu")->second.get_value<double>(),
                           value.find("sd")->second.get_value<double>());
         }
 

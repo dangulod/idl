@@ -3,3 +3,4 @@ dist/
 idlpy.egg-info
 .vscode
 __pycache__
+*.so

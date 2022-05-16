@@ -40,7 +40,7 @@ namespace idl
             utils::isFinite(x);
             if (x < this->m_lower || x > this->m_upper) return 0;
 
-            return (1 / this->m_upper - this->m_lower);
+            return 1 / (this->m_upper - this->m_lower);
         }
 
         double Uniform::quantile(double p)

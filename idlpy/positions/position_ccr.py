@@ -6,6 +6,7 @@ from .bond import Bond
 from enum import Enum
 from ..utils import Switch
 from copy import copy
+from typing import Union
 
 class PositionCCR(Position):
     industry = ""
@@ -25,12 +26,15 @@ class PositionCCR(Position):
                  country: str,
                  idio_seed: int,
                  hedges: List[Hedge] = [],
-                 transactions: tuple = ()) -> None:
+                 transactions: Union[TransactionCCR, tuple] = ()) -> None:
         super().__init__(jtd, notional, sector, region, rating, idio_seed, hedges)
         self.industry     = industry
         self.country      = country
         self.CAGID        = CAGID
-        self.transactions = transactions
+        if isinstance(transactions, TransactionCCR):
+            self.transactions = (*self.transactions, *tuple([transactions]))
+        else:
+            self.transactions = (*self.transactions, *transactions)
 
     def __copy__(self):
         return PositionCCR(self.jtd_unhedged,
