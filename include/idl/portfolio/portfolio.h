@@ -54,7 +54,6 @@ namespace idl
                                bool hedge,
                                size_t id,
                                size_t n_threads);
-
         arma::vec id_component_loss(arma::mat *r,
                                     size_t seed,
                                     bool diversification,
@@ -101,10 +100,14 @@ namespace idl
 
         arma::mat correlation_sructure();
 
-        arma::mat get_scenarios(size_t n, size_t seed, size_t n_threads = std::thread::hardware_concurrency());
+        arma::mat get_scenarios(size_t n,
+                                size_t seed,
+                                size_t n_threads = std::thread::hardware_concurrency());
 
-        arma::vec getCWI(arma::vec f, size_t idio_id);
-        arma::vec getCWI(size_t seed, size_t idio_id);
+        arma::vec getCWI(arma::vec f,
+                         size_t idio_id);
+        arma::vec getCWI(size_t seed,
+                         size_t idio_id);
         arma::mat get_CWIs(size_t n,
                            size_t seed,
                            size_t n_threads = std::thread::hardware_concurrency());
