@@ -181,43 +181,68 @@ namespace idl
         return this->m_weights;
     }
 
-    double Position::get_systematic(arma::vec factors)
+    arma::vec Position::get_systematic(arma::mat factors)
     {
-        return arma::accu((*this->get_weights()) % factors);
+        return (*this->get_weights()) * factors;
     }
 
-    double Position::get_cwi(arma::vec factors, 
-                             size_t idio_id)
+    arma::vec Position::get_cwi(arma::mat factors, 
+                                size_t idio_id)
     {
         return this->get_systematic(factors) + 
-               this->get_weights()->get_idiosyncratic() *
+               (this->get_weights()->get_idiosyncratic() *
                static_distributions::dist_normal(generator::idiosyncratic,
-                                                 this->get_idio_seed() + idio_id);
+                                                 factors.n_rows,
+                                                 this->get_idio_seed() + idio_id));
     }
 
-    double Position::loss(arma::vec factors, 
+    double Position::loss(arma::mat factors, 
                           size_t idio_id,
                           bool diversification,
                           bool hedge)
     {
+        double output = 0;
+        
         if (diversification)
         {
-            double systematic = this->get_systematic(factors);
+            arma::vec systematic = this->get_systematic(factors);
 
-            double pd_c = this->get_PD().get_conditional_pd(systematic, 
-                                                            this->get_weights()->get_idiosyncratic());
+            arma::vec pd_c = this->get_PD().get_conditional_pd(systematic, 
+                                                               this->get_weights()->get_idiosyncratic());
 
-            return this->get_jtd(hedge) - this->get_notional(hedge) * pd_c * this->get_recovery()->generate_recovery();
+            auto it_pd_c        = pd_c.begin();
+            double tmp_jtd      = this->get_jtd(hedge);
+            double tmp_notional = this->get_notional(hedge);
+
+            while (it_pd_c != pd_c.end())
+            {
+                output += tmp_jtd - tmp_notional * (*it_pd_c) * this->get_recovery()->generate_recovery();
+
+                it_pd_c++;
+                tmp_notional -= tmp_notional * (*it_pd_c);
+                tmp_notional -= tmp_notional * (*it_pd_c);
+            }
+
+            return output;
         }
 
-        double cwi = this->get_cwi(factors, 
-                                   idio_id);
+        arma::vec cwi = this->get_cwi(factors, 
+                                      idio_id);
 
-        if (cwi > this->get_PD().get_normal_inverse_pd()) return 0;
+        auto it_cwi = cwi.begin();
 
-        double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id);
-        
-        return this->get_jtd(hedge) - this->get_notional(hedge) * recovery;
+        while (it_cwi != cwi.end())
+        {
+            if ((*it_cwi) < this->get_PD().get_normal_inverse_pd())
+            {
+                double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id);
+                return this->get_jtd(hedge) - this->get_notional(hedge) * recovery;
+            }
+
+            it_cwi++;
+        }
+         
+        return output;
     }
 
 } // namespace idl

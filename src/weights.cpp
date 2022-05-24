@@ -95,6 +95,11 @@ namespace idl
         return output;
     }
 
+    arma::vec Weights::operator*(const arma::mat & rhs) const
+    {
+        return rhs * arma::vec(*this);
+    }
+
     double Weights::get_R2()
     {
         return this->m_R2;

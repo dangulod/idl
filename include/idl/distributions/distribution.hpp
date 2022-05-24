@@ -45,7 +45,8 @@ namespace idl
             }
 
             template<typename engine>
-            double operator()(engine e, unsigned long seed)
+            double operator()(engine e,
+                              unsigned long seed)
             {
                 e.seed(seed);
 
@@ -59,7 +60,8 @@ namespace idl
                 return (*this)(generator);
             }
 
-            arma::vec operator()(size_t n, unsigned long seed)
+            arma::vec operator()(size_t n,
+                                 unsigned long seed)
             {
                 std::mt19937_64 generator;
 
@@ -67,7 +69,9 @@ namespace idl
             }
 
             template<typename engine>
-            arma::vec operator()(engine e, size_t n, unsigned long seed)
+            arma::vec operator()(engine e,
+                                 size_t n,
+                                 unsigned long seed)
             {
                 e.seed(seed);
                 
@@ -85,7 +89,10 @@ namespace idl
             }
 
             template<typename engine>
-            arma::mat operator()(engine e, size_t n_rows, size_t n_cols, unsigned long seed)
+            arma::mat operator()(engine e,
+                                 size_t n_rows,
+                                 size_t n_cols,
+                                 unsigned long seed)
             {
                 e.seed(seed);
                 

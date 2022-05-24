@@ -9,6 +9,25 @@ namespace py = pybind11;
 std::string double_to_string(double value);
 
 void ex_risk_params(py::module_ &m) {
+    py::class_<idl::PD>(m, "PD")
+        .def(py::init<double>())
+        .def("__repr__", [](const idl::PD & object)
+        {
+            return double_to_string(object.get_pd());
+        })
+        .def("get_conditional_pd", [](idl::PD & object,
+                                      py::array_t<double, py::array::c_style | py::array::forcecast> systematic,
+                                      double weight_idio)
+        {
+            std::vector<double> systematic_vec(systematic.size());
+
+            // copy py::array -> std::vector
+            std::memcpy(systematic_vec.data(), systematic.data(), systematic.size() * sizeof(double));
+
+            return object.get_conditional_pd(systematic_vec,
+                                             weight_idio);
+        })
+    ;
     py::class_<idl::IDLParams>(m, "IDLParams")
         .def(py::init<>())
         .def("get_recovery", [](idl::IDLParams & object, std::string value)

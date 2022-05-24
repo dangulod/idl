@@ -39,7 +39,7 @@ static void FACTOR_BENCH(benchmark::State& state) {
     }
   
   while (state.KeepRunning()) {
-    portfolio.component_loss(1e3, 123456789);
+    portfolio.component_loss(1e3, 2, 123456789);
   }
 }
 

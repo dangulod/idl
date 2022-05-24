@@ -25,6 +25,7 @@ namespace idl
         bool operator !=(const Weights &rhs) const;
 
         arma::vec operator%(const arma::vec & rhs) const;
+        arma::vec operator*(const arma::mat & rhs) const;
 
         double get_R2();
         double get_idiosyncratic();

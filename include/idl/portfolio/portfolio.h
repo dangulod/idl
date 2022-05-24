@@ -16,18 +16,21 @@ namespace idl
         IDLParams m_idlparams;
         std::map<std::string, std::shared_ptr<Position>> m_position;
 
-        void v_rand(arma::mat *r,
+        void v_rand(arma::cube *r,
                     size_t n,
+                    size_t n_replenishment,
                     size_t seed,
                     size_t id,
                     size_t n_threads);
-        void v_cwi (arma::mat *r,
-                    size_t n,
-                    size_t seed,
-                    size_t id,
-                    size_t n_threads);
+        void v_cwi(arma::cube *r,
+                   size_t n,
+                   size_t n_replenishment,
+                   size_t seed,
+                   size_t id,
+                   size_t n_threads);
         void v_component_loss(arma::mat *r,
                               size_t n,
+                              size_t n_replenishment,
                               size_t seed,
                               bool diversification,
                               bool hedge,
@@ -35,6 +38,7 @@ namespace idl
                               size_t n_threads);
         void v_component_loss_scen(arma::mat *r,
                                    std::vector<size_t> scenarios_ids,
+                                   size_t n_replenishment,
                                    size_t seed,
                                    bool diversification,
                                    bool hedge,
@@ -42,6 +46,7 @@ namespace idl
                                    size_t n_threads);
         void v_total_loss(arma::mat *r,
                           size_t n,
+                          size_t n_replenishment,
                           size_t seed,
                           bool diversification,
                           bool hedge,
@@ -49,17 +54,20 @@ namespace idl
                           size_t n_threads);
         void v_total_loss_scen(arma::mat *r,
                                std::vector<size_t> scenarios_ids,
+                               size_t n_replenishment,
                                size_t seed,
                                bool diversification,
                                bool hedge,
                                size_t id,
                                size_t n_threads);
         arma::vec id_component_loss(arma::mat *r,
+                                    size_t n_replenishment,
                                     size_t seed,
                                     bool diversification,
                                     bool hedge,
                                     size_t id);
         double id_total_loss(arma::mat *r,
+                             size_t n_replenishment,
                              size_t seed,
                              bool diversification,
                              bool hedge,
@@ -100,38 +108,45 @@ namespace idl
 
         arma::mat correlation_sructure();
 
-        arma::mat get_scenarios(size_t n,
-                                size_t seed,
-                                size_t n_threads = std::thread::hardware_concurrency());
+        arma::cube get_scenarios(size_t n,
+                                 size_t n_replenishment,
+                                 size_t seed,
+                                 size_t n_threads = std::thread::hardware_concurrency());
 
-        arma::vec getCWI(arma::vec f,
+        arma::mat getCWI(arma::mat f,
                          size_t idio_id);
-        arma::vec getCWI(size_t seed,
+        arma::mat getCWI(size_t n_replenishment,
+                         size_t seed,
                          size_t idio_id);
-        arma::mat get_CWIs(size_t n,
-                           size_t seed,
-                           size_t n_threads = std::thread::hardware_concurrency());
+        arma::cube get_CWIs(size_t n,
+                            size_t n_replenishment,
+                            size_t seed,
+                            size_t n_threads = std::thread::hardware_concurrency());
 
-        arma::vec component_loss(arma::vec f,
+        arma::vec component_loss(arma::mat f,
                                  size_t idio_id,
                                  bool diversification = false,
                                  bool hedge = true);
         arma::mat component_loss(size_t n,
+                                 size_t n_replenishment,
                                  size_t seed,
                                  bool diversification = false,
                                  bool hedge = true,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::mat component_loss(std::vector<size_t> scenarios_ids,
+                                 size_t n_replenishment,
                                  size_t seed,
                                  bool diversification = false,
                                  bool hedge = true,
                                  size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(size_t n,
+                             size_t n_replenishment,
                              size_t seed,
                              bool diversification = false,
                              bool hedge = true,
                              size_t n_threads = std::thread::hardware_concurrency());
         arma::vec total_loss(std::vector<size_t> scenarios_ids,
+                             size_t n_replenishment,
                              size_t seed,
                              bool diversification = false,
                              bool hedge = true,

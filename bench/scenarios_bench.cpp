@@ -30,7 +30,7 @@ static void SCENARIOS_BENCH(benchmark::State& state) {
     idl::Portfolio portfolio(idl_factor, idl_params);
   
   while (state.KeepRunning()) {
-    portfolio.get_scenarios(1e5, 123456789);
+    portfolio.get_scenarios(1e5, 2, 123456789);
   }
 }
 

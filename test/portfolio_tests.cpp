@@ -44,12 +44,14 @@ TEST(Portfolio, class)
         portfolio.add_position(std::to_string(ii), count);
     }
 
-    EXPECT_EQ(portfolio.size(), 10);
+    portfolio.get_scenarios(10, 2, 123456789).print();
+    portfolio.get_CWIs(10, 2, 123456789, 1).print();
 
+    EXPECT_EQ(portfolio.size(), 10);
 
     portfolio.to_json("/tmp/portfolio.json");
 
     idl::Portfolio p = idl::Portfolio::from_json("/tmp/portfolio.json");
 
-    p.component_loss(100, 123456789, 0, 1).print();
+    p.component_loss(100, 2, 123456789, 0, 1, 1).print();
 }

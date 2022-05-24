@@ -21,6 +21,10 @@ void ex_arma(py::module_ &m) {
     {
         return arma::vec(n, arma::fill::randu);
     });
+    m.def("cor", [](const arma::Mat<double> & object)
+    {
+        return arma::mat(arma::cor(object));
+    });
     py::class_<arma::Cube<double>>(m, "arma_cube")
         .def_property_readonly("n_rows", [](const arma::Cube<double> & object)
         {

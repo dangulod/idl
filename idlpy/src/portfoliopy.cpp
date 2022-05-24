@@ -52,20 +52,21 @@ void ex_portfolio(py::module_ &m) {
         }, py::keep_alive<0, 1>())
         .def("get_correlation_structure", &idl::Portfolio::correlation_sructure)
         .def("get_scenarios", &idl::Portfolio::get_scenarios, 
-            py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
+            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"),
+            py::arg("n_threads") = std::thread::hardware_concurrency())
         .def("get_CWIs", &idl::Portfolio::get_CWIs, 
-            py::arg("n"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
-            py::arg("n"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("component_loss", py::overload_cast<size_t, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
+            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
             py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
-            py::arg("scenarios_ids"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss),
+            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0,
+            py::arg("hedge") = true, py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("total_loss", py::overload_cast<size_t, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
+            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
             py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
-            py::arg("n"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
-            py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
-            py::arg("scenarios_ids"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
-            py::arg("n_threads") = std::thread::hardware_concurrency())
+        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss),
+            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0,
+            py::arg("hedge") = true, py::arg("n_threads") = std::thread::hardware_concurrency())
         ;
 }
