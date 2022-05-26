@@ -108,6 +108,21 @@ namespace idl
 
                 return rnd;
             }
+
+            template<typename engine>
+            double random(engine e,
+                          size_t n,
+                          unsigned long seed)
+            {
+                e.seed(seed);
+
+                for (size_t ii = 0; ii < n; ii++)
+                {
+                    e();
+                }
+
+                return (*this)(e);
+            }
         };
     } // namespace distributions
 } // namespace idl
