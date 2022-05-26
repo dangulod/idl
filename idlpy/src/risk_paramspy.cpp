@@ -15,7 +15,8 @@ void ex_risk_params(py::module_ &m) {
         {
             return double_to_string(object.get_pd());
         })
-        .def("get_conditional_pd", &idl::PD::get_conditional_pd)
+        .def("get_conditional_pd", py::vectorize(&idl::PD::get_conditional_pd))
+        .def("default_time", py::vectorize(&idl::PD::default_time))
     ;
     py::class_<idl::IDLParams>(m, "IDLParams")
         .def(py::init<>())
