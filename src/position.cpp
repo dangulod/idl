@@ -198,34 +198,8 @@ namespace idl
 
     double Position::loss(arma::mat factors, 
                           size_t idio_id,
-                          bool diversification,
                           bool hedge)
     {
-        double output = 0;
-        
-        if (diversification)
-        {
-            arma::vec systematic = this->get_systematic(factors);
-
-            arma::vec pd_c = this->get_PD().get_conditional_pd(systematic, 
-                                                               this->get_weights()->get_idiosyncratic());
-
-            auto it_pd_c        = pd_c.begin();
-            double tmp_jtd      = this->get_jtd(hedge);
-            double tmp_notional = this->get_notional(hedge);
-
-            while (it_pd_c != pd_c.end())
-            {
-                output += tmp_jtd - tmp_notional * (*it_pd_c) * this->get_recovery()->generate_recovery();
-
-                it_pd_c++;
-                tmp_notional -= tmp_notional * (*it_pd_c);
-                tmp_notional -= tmp_notional * (*it_pd_c);
-            }
-
-            return output;
-        }
-
         arma::vec cwi = this->get_cwi(factors, 
                                       idio_id);
 
@@ -241,8 +215,34 @@ namespace idl
 
             it_cwi++;
         }
-         
-        return output;
+
+        return 0;
     }
 
+    double Position::loss_diversified(arma::mat factors, 
+                                      size_t idio_id,
+                                      bool hedge)
+    {
+        double output(0);
+        double tmp_jtd(this->get_jtd(hedge));
+        double tmp_notional(this->get_notional(hedge));
+    
+        arma::vec systematic = this->get_systematic(factors);
+
+        arma::vec pd_c = this->get_PD().get_conditional_pd(systematic, 
+                                                            this->get_weights()->get_idiosyncratic());
+
+        auto it_pd_c        = pd_c.begin();
+
+        while (it_pd_c != pd_c.end())
+        {
+            output += tmp_jtd - tmp_notional * (*it_pd_c) * this->get_recovery()->generate_recovery();
+
+            it_pd_c++;
+            tmp_notional -= tmp_notional * (*it_pd_c);
+            tmp_notional -= tmp_notional * (*it_pd_c);
+        }
+
+        return output;
+    }
 } // namespace idl

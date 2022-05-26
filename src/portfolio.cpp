@@ -298,10 +298,17 @@ namespace idl
         
         while (it_position != this->end())
         {
-            *it_output = it_position->second->loss(f,
-                                                   idio_id,
-                                                   diversification,
-                                                   hedge);
+            if (diversification)
+            {
+                *it_output = it_position->second->loss_diversified(f,
+                                                                   idio_id,
+                                                                   hedge);
+            } else
+            {
+                *it_output = it_position->second->loss(f,
+                                                       idio_id,
+                                                       hedge);
+            }
             
             it_position++;
             it_output++;

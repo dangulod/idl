@@ -60,13 +60,16 @@ namespace idl
         std::shared_ptr<Weights> get_weights() const;
         
         arma::vec get_systematic(arma::mat factors);
-        arma::vec get_cwi(arma::mat factors, 
+        arma::vec get_cwi(arma::mat factors,
                           size_t idio_id);
 
-        double loss(arma::mat factors, 
+        double loss(arma::mat factors,
                     size_t idio_id,
-                    bool diversification = false,
                     bool hedge = true);
+        
+        double loss_diversified(arma::mat factors, 
+                                size_t idio_id,
+                                bool hedge = true);
     };
 
 } // namespace idl
