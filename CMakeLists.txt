@@ -43,7 +43,7 @@ file(GLOB MODEL_SOURCES
 include(FetchContent)
 FetchContent_Declare(armadillo-code
                      GIT_REPOSITORY https://gitlab.com/conradsnicta/armadillo-code
-                     GIT_TAG 10.8.x)
+                     GIT_TAG 11.1.x)
 FetchContent_MakeAvailable(armadillo-code)
 
 add_library(armadillo_int INTERFACE)
