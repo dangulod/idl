@@ -44,5 +44,22 @@ namespace idl
 
         return output;
     }
+
+    arma::vec PD::default_time(arma::vec cwi)
+    {
+        arma::vec output(cwi.size());
+
+        auto it_output = output.begin();
+        auto it_cwi    = cwi.begin();
+
+        while (it_output != output.end())
+        {
+            (*it_output) = log(idl::static_distributions::dist_normal.cdf(*it_cwi)) / log(1 - this->m_pd);
+
+            it_output++; it_cwi++;
+        }
+
+        return output;
+    }
 } // namespace idl
 

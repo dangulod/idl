@@ -22,6 +22,8 @@ namespace idl
 
         arma::vec get_conditional_pd(arma::vec systematic, 
                                      double weight_idio);
+
+        arma::vec default_time(arma::vec cwi);
     };
 } // namespace idl
 
