@@ -14,14 +14,20 @@ namespace idl
     Recovery::Recovery(std::shared_ptr<distributions::Distribution> distribution) :
         m_fixed_recovery(std::fmin(std::fmax(0, distribution->mean()), 1)), m_distribution(distribution) { }
 
-    double Recovery::generate_recovery(size_t seed, bool fixed)
+    double Recovery::generate_recovery(size_t seed,
+                                       size_t replenishment,
+                                       bool fixed)
     {
         if (this->m_distribution == nullptr | fixed)
         {
             return this->generate_recovery();
         }
 
-        return std::fmin(std::fmax(0, (*this->m_distribution)(generator::recovery, seed)), 1);
+        return std::fmin(std::fmax(0,
+                                   this->m_distribution->random(generator::recovery,
+                                                                replenishment,
+                                                                seed)),
+                         1);
     }
 
     double Recovery::generate_recovery()

@@ -214,8 +214,13 @@ namespace idl
 
         while (it_position != this->end())
         {
-            output.row(it_output) = it_position->second->get_cwi(f,
-                                                                 idio_id).t();
+            for (size_t replenishment = 0; replenishment < f.n_rows; replenishment++)
+            {
+                output.at(it_output, replenishment) = it_position->second->get_cwi(f.row(replenishment).t(),
+                                                                                   idio_id,
+                                                                                   replenishment);
+            }
+
             it_position++;
             it_output++;
         }
@@ -244,10 +249,6 @@ namespace idl
     {
         while (id < n)
         {
-            arma::mat tmp = this->getCWI(n_replenishment,
-                                         seed + id,
-                                         id);
-
             r->slice(id) = this->getCWI(n_replenishment,
                                         seed + id,
                                         id).t();

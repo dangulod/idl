@@ -27,39 +27,14 @@ namespace idl
         return this->m_n_inv_pd;
     }
 
-    arma::vec PD::get_conditional_pd(arma::vec systematic,
-                                     double weight_idio)
+    double PD::get_conditional_pd(double systematic,
+                                  double weight_idio)
     {
-        arma::vec output(systematic.size());
-
-        auto it_output     = output.begin();
-        auto it_systematic = systematic.begin();
-
-        while (it_output != output.end())
-        {
-            (*it_output) = static_distributions::dist_normal.cdf((this->get_normal_inverse_pd() - (*it_systematic)) / weight_idio);
-            it_output++;
-            it_systematic++;
-        }
-
-        return output;
+        return static_distributions::dist_normal.cdf((this->get_normal_inverse_pd() - systematic) / weight_idio);
     }
 
-    arma::vec PD::default_time(arma::vec cwi)
+    double PD::default_time(double cwi)
     {
-        arma::vec output(cwi.size());
-
-        auto it_output = output.begin();
-        auto it_cwi    = cwi.begin();
-
-        while (it_output != output.end())
-        {
-            (*it_output) = log(idl::static_distributions::dist_normal.cdf(*it_cwi)) / log(1 - this->m_pd);
-
-            it_output++; it_cwi++;
-        }
-
-        return output;
+        return log(idl::static_distributions::dist_normal.cdf(cwi)) / log(1 - this->m_pd);
     }
 } // namespace idl
-

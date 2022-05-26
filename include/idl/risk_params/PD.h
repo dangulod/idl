@@ -20,10 +20,10 @@ namespace idl
         double get_pd() const;
         double get_normal_inverse_pd() const;
 
-        arma::vec get_conditional_pd(arma::vec systematic, 
-                                     double weight_idio);
+        double get_conditional_pd(double systematic, 
+                                  double weight_idio);
 
-        arma::vec default_time(arma::vec cwi);
+        double default_time(double cwi);
     };
 } // namespace idl
 

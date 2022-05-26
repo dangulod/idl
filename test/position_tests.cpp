@@ -22,20 +22,18 @@ TEST(Position, cwi)
 
     arma::mat factors     = {{1, 2, 3}, {-1, -2, -3}};
     arma::vec sys_results = {0.6, -0.6};
-    arma::vec systematic  = count.get_systematic(factors);
 
     for (size_t ii = 0; ii < factors.n_rows; ii++)
     {
         EXPECT_DOUBLE_EQ(sys_results[ii],
-                         systematic[ii]);
+                         count.get_systematic(factors.row(ii).t()));
     }
 
-    arma::vec cwi         = count.get_cwi(factors, 0);
     arma::vec cwi_results = {-0.25103959237496543, -0.50807550512773014};
 
     for (size_t ii = 0; ii < factors.n_rows; ii++)
     {
         EXPECT_DOUBLE_EQ(cwi_results[ii],
-                         cwi[ii]);
+                         count.get_cwi(factors.row(ii).t(), 0, ii));
     }
 }

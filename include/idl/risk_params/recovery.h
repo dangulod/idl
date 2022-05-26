@@ -20,7 +20,9 @@ namespace idl
         Recovery(std::shared_ptr<distributions::Distribution> distribution);
         ~Recovery() = default;
 
-        double generate_recovery(size_t seed, bool fixed = false);
+        double generate_recovery(size_t seed,
+                                 size_t replenishment,
+                                 bool fixed = false);
         double generate_recovery();
 
         bool is_stochastic() const;

@@ -15,18 +15,7 @@ void ex_risk_params(py::module_ &m) {
         {
             return double_to_string(object.get_pd());
         })
-        .def("get_conditional_pd", [](idl::PD & object,
-                                      py::array_t<double, py::array::c_style | py::array::forcecast> systematic,
-                                      double weight_idio)
-        {
-            std::vector<double> systematic_vec(systematic.size());
-
-            // copy py::array -> std::vector
-            std::memcpy(systematic_vec.data(), systematic.data(), systematic.size() * sizeof(double));
-
-            return object.get_conditional_pd(systematic_vec,
-                                             weight_idio);
-        })
+        .def("get_conditional_pd", &idl::PD::get_conditional_pd)
     ;
     py::class_<idl::IDLParams>(m, "IDLParams")
         .def(py::init<>())
@@ -81,8 +70,8 @@ void ex_risk_params(py::module_ &m) {
         .def(py::init<double>())
         .def(py::init<std::shared_ptr<idl::distributions::Distribution>>())
         .def("generate_recovery", py::overload_cast<>(&idl::Recovery::generate_recovery))
-        .def("generate_recovery", py::overload_cast<size_t, bool>(&idl::Recovery::generate_recovery),
-            py::arg("seed"), py::arg("fixed") = false)
+        .def("generate_recovery", py::overload_cast<size_t, size_t, bool>(&idl::Recovery::generate_recovery),
+            py::arg("seed"), py::arg("replenishment") = 0, py::arg("fixed") = false)
         .def_property_readonly("distribution", &idl::Recovery::get_distribution)
         .def("is_stochastic", &idl::Recovery::is_stochastic)
         .def("__repr__", [](idl::Recovery & object)

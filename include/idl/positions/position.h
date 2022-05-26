@@ -59,9 +59,10 @@ namespace idl
         void set_weights(const std::shared_ptr<Weights> value);
         std::shared_ptr<Weights> get_weights() const;
         
-        arma::vec get_systematic(arma::mat factors);
-        arma::vec get_cwi(arma::mat factors,
-                          size_t idio_id);
+        double get_systematic(arma::vec factors);
+        double get_cwi(arma::vec factors,
+                       size_t idio_id,
+                       size_t replenishment);
 
         double loss(arma::mat factors,
                     size_t idio_id,
