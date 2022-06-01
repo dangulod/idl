@@ -75,7 +75,7 @@ namespace idl
 
     public:
         Portfolio() = delete;
-        Portfolio(Factor factor, IDLParams idlparams);
+        Portfolio(Factor factor, IDLParams idl_params);
         Portfolio(const Portfolio & value) = delete;
         Portfolio(Portfolio && value) = default;
         Portfolio& operator=(const Portfolio & value) = delete;

@@ -5,4 +5,7 @@ class Bond(Hedge):
                  jtd: float,
                  notional: float,
                  rating: int) -> None:
-        super().__init__(jtd, notional, rating)
+        Hedge.__init__(self,
+                       jtd      = float(jtd),
+                       notional = float(notional),
+                       rating   = int(rating))

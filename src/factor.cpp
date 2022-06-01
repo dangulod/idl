@@ -40,20 +40,20 @@ namespace idl
         return !((*this) == rhs);
     }
 
-    void Factor::add(const WeightsDimension dimension,
-                     const Weights value)
+    void Factor::add(const WeightsDimension weightsDimension,
+                     const Weights weights)
     {
         if (this->size() != 0)
         {
-            if (this->get_number_of_factors() != value.size())
+            if (this->get_number_of_factors() != weights.size())
             {
                 throw std::invalid_argument("(Factor::add) Weights must have the same number of factors");
             }
         }
 
-        auto success = this->m_weights.insert(std::make_pair(dimension, std::make_shared<Weights>(value)));
+        auto success = this->m_weights.insert(std::make_pair(weightsDimension, std::make_shared<Weights>(weights)));
 
-        if (!success.second & (*((*this)[dimension].get())) != value)
+        if (!success.second & (*((*this)[weightsDimension].get())) != weights)
         {
             throw std::invalid_argument("(Factor::add) Key alredy exists in the Factor object");
         }

@@ -3,8 +3,8 @@
 namespace idl
 {
     Portfolio::Portfolio(Factor factor,
-                         IDLParams idlparams) :
-        m_factor(factor), m_idlparams(idlparams)
+                         IDLParams idl_params) :
+        m_factor(factor), m_idlparams(idl_params)
     { 
         
     }

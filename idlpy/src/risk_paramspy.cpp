@@ -15,16 +15,19 @@ void ex_risk_params(py::module_ &m) {
         {
             return double_to_string(object.get_pd());
         })
-        .def("get_conditional_pd", py::vectorize(&idl::PD::get_conditional_pd))
-        .def("default_time", py::vectorize(&idl::PD::default_time))
+        .def("get_conditional_pd", py::vectorize(&idl::PD::get_conditional_pd),
+             py::arg("systematic"), py::arg("weight_idio"))
+        .def("default_time", py::vectorize(&idl::PD::default_time),
+             py::arg("cwi"))
     ;
     py::class_<idl::IDLParams>(m, "IDLParams")
         .def(py::init<>())
         .def("get_recovery", [](idl::IDLParams & object, std::string value)
         {
             return object.get_recovery(value);
-        })
-        .def("get_default_probability", &idl::IDLParams::get_default_probability)
+        }, py::arg("value"))
+        .def("get_default_probability", &idl::IDLParams::get_default_probability,
+             py::arg("value"), py::arg("rating"))
         .def("__repr__", [](const idl::IDLParams & object)
         {
             return "IDLParams class";
@@ -34,13 +37,33 @@ void ex_risk_params(py::module_ &m) {
                        idl::Recovery recovery)
         {
             object.add(name, recovery);
-        })
+        }, py::arg("name"), py::arg("recovery"))
         .def("add", [](idl::IDLParams & object,
                        std::string name, 
                        idl::RatingPD ratingPD)
         {
             object.add(name, ratingPD);
-        })
+        }, py::arg("name"), py::arg("ratingPD"))
+        .def("rating_keys", [](const idl::IDLParams & object)
+        {
+            return py::make_key_iterator(object.get_ratingPDs().begin(),
+                                         object.get_ratingPDs().end());
+        }, py::keep_alive<0, 1>())
+        .def("rating_items", [](const idl::IDLParams & object)
+        {
+            return py::make_iterator(object.get_ratingPDs().begin(),
+                                     object.get_ratingPDs().end());
+        }, py::keep_alive<0, 1>())
+        .def("recovery_keys", [](const idl::IDLParams & object)
+        {
+            return py::make_key_iterator(object.get_recoveries().begin(),
+                                         object.get_recoveries().end());
+        }, py::keep_alive<0, 1>())
+        .def("recovery_items", [](const idl::IDLParams & object)
+        {
+            return py::make_iterator(object.get_recoveries().begin(),
+                                     object.get_recoveries().end());
+        }, py::keep_alive<0, 1>())
     ;
     py::class_<idl::RatingPD>(m, "RatingPD")
         .def(py::init<>())
@@ -50,12 +73,12 @@ void ex_risk_params(py::module_ &m) {
         .def("__getitem__", [](idl::RatingPD & object,  unsigned int index)
         {
             return object[index];
-        })
+        }, py::arg("index"))
         .def("__call__", [](idl::RatingPD & object, unsigned int index)
         {
             return object[index];
-        })
-        .def("__eq__", &idl::RatingPD::operator==)
+        }, py::arg("index"))
+        .def("__eq__", &idl::RatingPD::operator==, py::arg("rhs"))
         .def("__repr__", [](const idl::RatingPD & object)
         {
             std::ostringstream out;
@@ -66,6 +89,18 @@ void ex_risk_params(py::module_ &m) {
 
             return out.str();
         })
+        .def("keys", [](const idl::RatingPD & object)
+        {
+            return py::make_key_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("__iter__", [](const idl::RatingPD & object)
+        {
+            return py::make_value_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("items", [](const idl::RatingPD & object)
+        {
+            return py::make_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
     ;
     py::class_<idl::Recovery, std::shared_ptr<idl::Recovery>>(m, "Recovery")
         .def(py::init<double>())

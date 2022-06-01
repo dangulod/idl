@@ -14,7 +14,7 @@ void ex_factor(py::module_ &m) {
         .def(py::init<idl::WeightsDimension &, idl::Weights>())
         .def_property_readonly("number_of_factors", &idl::Factor::get_number_of_factors)
         .def_property_readonly("default", &idl::Factor::get_default)
-        .def("add", &idl::Factor::add)
+        .def("add", &idl::Factor::add, py::arg("weightsDimension"), py::arg("weights"))
         .def("add", [](idl::Factor & object, 
                        py::array_t<unsigned int, py::array::c_style | py::array::forcecast> weightsDimension,
                        py::array_t<double, py::array::c_style | py::array::forcecast> weights)
@@ -34,15 +34,15 @@ void ex_factor(py::module_ &m) {
 
             object.add(idl::WeightsDimension(uint__ptr[0], uint__ptr[1], uint__ptr[2]), 
                        idl::Weights(weights_vec));
-        })
-        .def("to_json", &idl::Factor::to_json)
-        .def_static("from_json", &idl::Factor::from_json)
+        }, py::arg("weightsDimension"), py::arg("weights"))
+        .def("to_json", &idl::Factor::to_json, py::arg("file"))
+        .def_static("from_json", &idl::Factor::from_json, py::arg("file"))
         .def("size", &idl::Factor::size)
         .def("__len__", &idl::Factor::size)
         .def("__getitem__", [](idl::Factor & object, idl::WeightsDimension & index)
         {
             return object[index];
-        })
+        }, py::arg("index"))
         .def("__getitem__", [](idl::Factor & object, py::tuple index)
         {
             if (index.size() != 3)
@@ -55,21 +55,21 @@ void ex_factor(py::module_ &m) {
                                      py::cast<unsigned int>(index[2]));
 
             return object[ii];
-        })
+        }, py::arg("index"))
         .def("__call__", [](idl::Factor & object, const unsigned int rating, 
                             const unsigned int region, const unsigned int sector)
         {
-            idl::WeightsDimension ii(rating, 
-                                     region, 
-                                     sector);
+            idl::WeightsDimension index(rating, 
+                                        region, 
+                                        sector);
 
-            return object.at(ii);
-        })
+            return object.at(index);
+        }, py::arg("rating"), py::arg("region"), py::arg("sector"))
         .def("__call__", [](idl::Factor & object, idl::WeightsDimension & index)
         {
             return object.at(index);
-        })
-        .def("__eq__", &idl::Factor::operator==)
+        }, py::arg("index"))
+        .def("__eq__", &idl::Factor::operator==, py::arg("rhs"))
         .def("__repr__", [](const idl::Factor & object)
         {
             std::ostringstream out;
@@ -80,6 +80,18 @@ void ex_factor(py::module_ &m) {
 
             return out.str();
         })
+        .def("keys", [](const idl::Factor & object)
+        {
+            return py::make_key_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("__iter__", [](const idl::Factor & object)
+        {
+            return py::make_value_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
+        .def("items", [](const idl::Factor & object)
+        {
+            return py::make_iterator(object.begin(), object.end());
+        }, py::keep_alive<0, 1>())
         ;
     py::class_<idl::WeightsDimension>(m, "WeightsDimension")
         .def(py::init<const unsigned &, const unsigned &, const unsigned &>())
@@ -96,18 +108,18 @@ void ex_factor(py::module_ &m) {
             return idl::WeightsDimension(uint__ptr[0],
                                          uint__ptr[1],
                                          uint__ptr[2]);
-        }))
+        }), py::arg("input"))
         .def_property_readonly("rating", &idl::WeightsDimension::get_rating)
         .def_property_readonly("region", &idl::WeightsDimension::get_region)
         .def_property_readonly("sector", &idl::WeightsDimension::get_sector)
         .def("to_string", &idl::WeightsDimension::to_string)
-        .def("__eq__", &idl::WeightsDimension::operator==)
-        .def("__ne__", &idl::WeightsDimension::operator!=)
-        .def("__lt__", &idl::WeightsDimension::operator<)
-        .def("__le__", &idl::WeightsDimension::operator<=)
-        .def("__gt__", &idl::WeightsDimension::operator>)
-        .def("__ge__", &idl::WeightsDimension::operator>=)
-        .def_static("from_string", &idl::WeightsDimension::from_string)
+        .def("__eq__", &idl::WeightsDimension::operator==, py::arg("rhs"))
+        .def("__ne__", &idl::WeightsDimension::operator!=, py::arg("rhs"))
+        .def("__lt__", &idl::WeightsDimension::operator< , py::arg("rhs"))
+        .def("__le__", &idl::WeightsDimension::operator<=, py::arg("rhs"))
+        .def("__gt__", &idl::WeightsDimension::operator> , py::arg("rhs"))
+        .def("__ge__", &idl::WeightsDimension::operator>=, py::arg("rhs"))
+        .def_static("from_string", &idl::WeightsDimension::from_string, py::arg("value"))
         .def("__repr__", [](const idl::WeightsDimension & object)
         {
             std::ostringstream out;
@@ -132,31 +144,31 @@ void ex_factor(py::module_ &m) {
             std::memcpy(array_vec.data(), input.data(), input.size() * sizeof(double));
 
             return idl::Weights(array_vec);
-        }))
+        }), py::arg("input"))
         .def_property_readonly("idiosyncratic", &idl::Weights::get_idiosyncratic)
         .def_property_readonly("R2", &idl::Weights::get_R2)
-        .def("__eq__", &idl::Weights::operator==)
-        .def("__getitem__", [](const idl::Weights & object, size_t ii)
+        .def("__eq__", &idl::Weights::operator==, py::arg("rhs"))
+        .def("__getitem__", [](const idl::Weights & object, size_t index)
         {
-            if (ii >= object.size())
+            if (index >= object.size())
             {
                 throw std::out_of_range("Weight index out of range");
             }
 
-            return object.at(ii);
-        })
+            return object.at(index);
+        }, py::arg("index"))
         .def("__repr__", [](const idl::Weights & object)
         {
             std::ostringstream out;
 
             out << "[";
 
-            auto ii = object.begin();
-            while (ii != object.end())
+            auto index = object.begin();
+            while (index != object.end())
             {
-                out << double_to_string(*ii);
-                ii++;
-                if (ii != object.end()) out << ", ";
+                out << double_to_string(*index);
+                index++;
+                if (index != object.end()) out << ", ";
             }
 
             out << "]";

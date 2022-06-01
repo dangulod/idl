@@ -13,9 +13,12 @@ std::string double_to_string(double value)
 
 void ex_distributions(py::module_ &m) {
     py::class_<idl::distributions::Distribution, std::shared_ptr<idl::distributions::Distribution>>(m, "Distribution")
-        .def("cdf", py::vectorize(&idl::distributions::Distribution::cdf))
-        .def("pdf", py::vectorize(&idl::distributions::Distribution::pdf))
-        .def("quantile", py::vectorize(&idl::distributions::Distribution::quantile))
+        .def("cdf", py::vectorize(&idl::distributions::Distribution::cdf),
+             py::arg("x"))
+        .def("pdf", py::vectorize(&idl::distributions::Distribution::pdf),
+             py::arg("x"))
+        .def("quantile", py::vectorize(&idl::distributions::Distribution::quantile),
+             py::arg("p"))
         .def("mean", &idl::distributions::Distribution::mean)
         .def("__call__", [](idl::distributions::Distribution & object, size_t n, unsigned long seed)
         {
@@ -29,7 +32,7 @@ void ex_distributions(py::module_ &m) {
             std::memcpy(result_ptr, output.memptr(), output.size() * sizeof(double));
 
             return result;
-        })
+        }, py::arg("n"), py::arg("seed"))
     ;
     py::class_<idl::distributions::LogNormal, 
                idl::distributions::Distribution,

@@ -24,6 +24,16 @@ namespace idl
         }
     }
 
+    std::map<std::string, std::shared_ptr<RatingPD>> IDLParams::get_ratingPDs() const
+    {
+        return this->m_ratings;
+    }
+    
+    std::map<std::string, std::shared_ptr<Recovery>> IDLParams::get_recoveries() const
+    {
+        return this->m_recoveries;
+    }
+
     std::shared_ptr<Recovery> IDLParams::get_recovery(std::string value)
     {
         auto output = this->m_recoveries.find(value);

@@ -1,3 +1,4 @@
+from ctypes import pointer
 import unittest
 import idlpy
 
@@ -50,3 +51,28 @@ class TestPosition(unittest.TestCase):
         self.assertEqual(position2.notional, 60)
         self.assertEqual(position2.notional_unhedged, 90)
 
+    def test_add_transaction(self):
+        position = idlpy.positions.PositionCCR(900, 1000, 5, 1, 3, "1", "1001", "ES", 1,
+                                              [idlpy.positions.CDS(-100, -100, 1), idlpy.positions.CDS(-100, -100, 1)],
+                                              tuple([idlpy.positions.TransactionCCR("1", "1", 900, 1000)]))
+
+        self.assertEqual(len(position.transactions), 1)
+        self.assertEqual(len(position.hedges), 2)
+
+        position2 = position + idlpy.positions.TransactionCCR("1", "1", 900, 2000)
+        self.assertEqual(len(position.transactions), 1)
+        self.assertEqual(len(position2.transactions), 2)
+
+        position += idlpy.positions.TransactionCCR("1", "1", 900, 2000)
+        self.assertEqual(len(position.transactions), 2)
+
+        self.assertEqual(position, position2)
+
+        notional = 0
+        jtd      = 0
+        for it_transaction in position:
+            notional += it_transaction.notional
+            jtd      += it_transaction.jtd
+
+        self.assertEqual(notional, 3000)
+        self.assertEqual(jtd, 1800)

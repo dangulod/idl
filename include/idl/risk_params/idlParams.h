@@ -24,6 +24,9 @@ namespace idl
         void add(std::string name, RatingPD rating);
         void add(std::string name, Recovery dist);
 
+        std::map<std::string, std::shared_ptr<RatingPD>> get_ratingPDs() const;
+        std::map<std::string, std::shared_ptr<Recovery>> get_recoveries() const;
+
         std::shared_ptr<Recovery> get_recovery(std::string value);
         PD get_default_probability(std::string value, unsigned int rating);
 

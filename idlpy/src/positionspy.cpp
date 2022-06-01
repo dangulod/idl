@@ -10,8 +10,9 @@ std::string double_to_string(double value);
 
 void ex_position(py::module_ &m) {
     py::class_<idl::Hedge, std::shared_ptr<idl::Hedge>>(m, "Hedge")
-        .def(py::init<const double &, const double &, const unsigned &>())
-        .def("__eq__", &idl::Hedge::operator==)
+        .def(py::init<const double &, const double &, const unsigned int &>(),
+             py::arg("jtd"), py::arg("notional"), py::arg("rating"))
+        .def("__eq__", &idl::Hedge::operator==, py::arg("rhs"))
         .def_property_readonly("jtd", &idl::Hedge::get_jtd)
         .def_property_readonly("notional", &idl::Hedge::get_notional)
         .def_property_readonly("rating", &idl::Hedge::get_rating)
@@ -34,18 +35,20 @@ void ex_position(py::module_ &m) {
         })
         ;
     py::class_<idl::Position, std::shared_ptr<idl::Position>>(m, "Position")
-        .def(py::init<const double &, const double &, const unsigned &, const unsigned &, const unsigned &, size_t &,
+        .def(py::init<const double &, const double &, const unsigned int &, 
+             const unsigned int &, const unsigned int &, size_t &,
              std::vector<std::shared_ptr<idl::Hedge>>>(),
              py::arg("jtd"), py::arg("notional"), py::arg("rating"), py::arg("region"),
-             py::arg("sector"), py::arg("idio_seed"), py::arg("hedges") =  std::vector<std::shared_ptr<idl::Hedge>>())
+             py::arg("sector"), py::arg("idio_seed"), 
+             py::arg("hedges") =  std::vector<std::shared_ptr<idl::Hedge>>())
         .def(py::init<const double &, const double &, idl::WeightsDimension &, size_t &,
              std::vector<std::shared_ptr<idl::Hedge>>>(),
              py::arg("jtd"), py::arg("notional"), py::arg("w_dim"), py::arg("idio_seed"),
              py::arg("hedges") =  std::vector<std::shared_ptr<idl::Hedge>>())
-        .def("__eq__", &idl::Position::operator==)
-        .def("__add__", &idl::Position::operator+)
-        .def("_add_hedge", &idl::Position::operator+)
-        .def("__iadd__", &idl::Position::operator+=)
+        .def("__eq__", &idl::Position::operator==, py::arg("rhs"))
+        .def("__add__", &idl::Position::operator+, py::arg("value"))
+        .def("_add_hedge", &idl::Position::operator+, py::arg("value"))
+        .def("__iadd__", &idl::Position::operator+=, py::arg("value"))
         .def_property_readonly("hedges", &idl::Position::get_hedges)
         .def_property_readonly("jtd", [](const idl::Position & object)
         {

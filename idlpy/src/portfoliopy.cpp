@@ -10,20 +10,20 @@ std::string double_to_string(double value);
 
 void ex_portfolio(py::module_ &m) {
     py::class_<idl::Portfolio>(m, "Portfolio")
-        .def(py::init<idl::Factor&, idl::IDLParams&>())
+        .def(py::init<idl::Factor&, idl::IDLParams&>(), py::arg("factor"), py::arg("idl_params"))
         .def_property_readonly("factor", &idl::Portfolio::get_factor)
         .def_property_readonly("IDLParams", &idl::Portfolio::get_IDLParams)
         .def_property_readonly("number_of_factors", &idl::Portfolio::get_number_of_factors)
         .def("size", &idl::Portfolio::size)
         .def("__len__", &idl::Portfolio::size)
-        .def("to_json", &idl::Portfolio::to_json)
-        .def_static("from_json", &idl::Portfolio::from_json)
+        .def("to_json", &idl::Portfolio::to_json, py::arg("file"))
+        .def_static("from_json", &idl::Portfolio::from_json, py::arg("file"))
         .def("__getitem__", [] (idl::Portfolio & object, 
                                 std::string id)
         {
             return object[id];
-        })
-        .def("add_position", &idl::Portfolio::add_position)
+        }, py::arg("id"))
+        .def("add_position", &idl::Portfolio::add_position, py::arg("id"), py::arg("value"))
         .def("__repr__", [](const idl::Portfolio & object)
         {
             std::ostringstream out;

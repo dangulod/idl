@@ -9,7 +9,7 @@ class TransactionCCR:
                  GFCID: str,
                  CAGID: str,
                  jtd: float,
-                 notional:float) -> None:
+                 notional: float) -> None:
         self.GFCID    = GFCID
         self.CAGID    = CAGID
         self.jtd      = jtd
@@ -23,11 +23,30 @@ class TransactionCCR:
             str(self.notional) +\
             "]"
 
-    def __eq__(self, rhs: "TransactionCCR") -> str:
+    @property
+    def jtd(self) -> float:
+        return self._jtd
+
+    @jtd.setter
+    def jtd(self,
+            value: any) -> None:
+        self._jtd = float(value)
+
+    @property
+    def notional(self) -> float:
+        return self._notional
+
+    @notional.setter
+    def notional(self,
+                 value: any) -> None:
+        self._notional = float(value)
+
+    def __eq__(self,
+               rhs: "TransactionCCR") -> bool:
         if not isinstance(rhs, TransactionCCR): 
             return False
         
         return self.CAGID == rhs.CAGID and \
-            self.CAGID == rhs.CAGID and \
+            self.GFCID == rhs.GFCID and \
             self.jtd == rhs.jtd and \
             self.notional == rhs.notional

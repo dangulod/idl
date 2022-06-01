@@ -30,7 +30,7 @@ namespace idl
         bool operator ==(const Factor &rhs) const;
         bool operator !=(const Factor &rhs) const;
 
-        void add(const WeightsDimension dimension,
+        void add(const WeightsDimension weightsDimension,
                  const Weights weights);
 
         std::map<WeightsDimension, std::shared_ptr<Weights>>::iterator begin();
