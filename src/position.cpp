@@ -9,9 +9,9 @@ namespace idl
         m_jtd(jtd), m_jtd_unhedged(jtd), m_notional(notional),
         m_notional_unhedged(notional),
         m_weight_dimension(rating, region, sector),
-        m_idio_seed(idio_seed), m_pd(0), 
-        m_recovery(std::shared_ptr<Recovery>(nullptr)),
-        m_weights(std::shared_ptr<Weights>(nullptr))
+        m_idio_seed(idio_seed), m_pd(std::make_shared<PD>(PD(0))), 
+        m_recovery(std::shared_ptr<Recovery>(new Recovery(0))),
+        m_weights(std::shared_ptr<Weights>(new Weights({1})))
     {
         for (auto & it_hedges: hedges)
         {
@@ -25,9 +25,9 @@ namespace idl
         m_jtd(jtd), m_jtd_unhedged(jtd), m_notional(notional),
         m_notional_unhedged(notional), m_weight_dimension(w_dim),
         m_idio_seed(idio_seed),
-        m_pd(0), 
-        m_recovery(std::shared_ptr<Recovery>(nullptr)),
-        m_weights(std::shared_ptr<Weights>(nullptr))
+        m_pd(std::make_shared<PD>(PD(0))), 
+        m_recovery(std::shared_ptr<Recovery>(new Recovery(0))),
+        m_weights(std::shared_ptr<Weights>(new Weights({1})))
     {
         for (auto & it_hedges: hedges)
         {
@@ -142,14 +142,14 @@ namespace idl
         return this->get_weight_dimension().get_sector();
     }
 
-    PD Position::get_PD() const
+    std::shared_ptr<PD> Position::get_PD() const
     {
         return this->m_pd;
     }
 
-    void Position::set_PD(const PD value)
+    void Position::set_PD(std::shared_ptr<PD> value)
     {
-        if (this->m_pd != value)
+        if ((*this->m_pd) != (*value))
         {
             this->m_pd = value;
         }
@@ -197,21 +197,90 @@ namespace idl
                                                         this->get_idio_seed() + idio_id));
     }
 
-    double Position::loss(arma::mat factors, 
-                          size_t idio_id,
-                          bool hedge)
+    arma::vec Position::loss(arma::mat factors,
+                             size_t idio_id,
+                             std::vector<double> times,
+                             double liquidity_horizon,
+                             bool hedge)
     {
-        for (size_t replenishment = 0; replenishment < factors.n_rows; replenishment++)
+        size_t number_of_replenishment(factors.n_rows);
+        arma::vec time_loss(times.size(), arma::fill::zeros);
+
+        for (size_t replenishment = 0;
+             replenishment < number_of_replenishment;
+             replenishment++)
         {
             double cwi = this->get_cwi(factors.row(replenishment).t(), 
                                        idio_id,
                                        replenishment);
 
-            if (cwi < this->get_PD().get_normal_inverse_pd())
+            if (cwi > (-this->get_PD()->get_normal_inverse_pd()))
             {
                 double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id,
                                                                           replenishment);
-                return this->get_jtd(hedge) - this->get_notional(hedge) * recovery;
+
+                double loss = this->get_jtd() - this->get_notional() * recovery; // <- Meter en una funcion junto a los hedges
+
+                double default_time = (this->get_PD()->default_time(cwi) + 
+                                      replenishment) * 
+                                      liquidity_horizon;
+
+                auto it_loss = time_loss.begin();
+                auto it_time = times.begin();
+
+                while (it_time != times.end())
+                {
+                    if (default_time < (*it_time))
+                    {
+                        (*it_loss) = loss;
+                    }
+                    
+                    it_loss++;
+                    it_time++;
+                }
+                
+                return time_loss;
+            }
+        }
+
+        return time_loss;
+    }
+
+    double Position::loss(arma::mat factors, 
+                          size_t idio_id,
+                          bool hedge)
+    {
+        size_t number_of_replenishment(factors.n_rows);
+        
+        for (size_t replenishment = 0;
+             replenishment < number_of_replenishment;
+             replenishment++)
+        {
+            double cwi = this->get_cwi(factors.row(replenishment).t(), 
+                                       idio_id,
+                                       replenishment);
+
+            if (cwi < this->get_PD()->get_normal_inverse_pd())
+            {
+                double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id,
+                                                                          replenishment);
+                double loss = this->get_jtd() - this->get_notional() * recovery;
+
+                if (hedge)
+                {
+                    auto it_hedge = this->get_hedges().begin();
+                    double hedge_id(0);
+
+                    while (it_hedge != this->get_hedges().end())
+                    {
+                        double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id,
+                                                                                  hedge_id * number_of_replenishment + replenishment);
+                        
+                        loss += (*it_hedge)->get_jtd() - (*it_hedge)->get_notional() * recovery;
+                    }
+                    
+                    return loss;
+                }
             }
         }
 
@@ -230,8 +299,8 @@ namespace idl
         {
             double systematic = this->get_systematic(factors.row(replenishment));
 
-            double pd_c = this->get_PD().get_conditional_pd(systematic,
-                                                            this->get_weights()->get_idiosyncratic());
+            double pd_c = this->get_PD()->get_conditional_pd(systematic,
+                                                             this->get_weights()->get_idiosyncratic());
 
             output += tmp_jtd - tmp_notional * pd_c * this->get_recovery()->generate_recovery();
 

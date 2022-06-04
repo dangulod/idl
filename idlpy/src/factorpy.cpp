@@ -95,7 +95,7 @@ void ex_factor(py::module_ &m) {
         ;
     py::class_<idl::WeightsDimension>(m, "WeightsDimension")
         .def(py::init<const unsigned &, const unsigned &, const unsigned &>())
-        .def(py::init([](py::array_t<unsigned int, py::array::c_style | py::array::forcecast> input) 
+        .def(py::init([](py::array_t<unsigned int, py::array::c_style | py::array::forcecast> input)
         {
             auto input_buffer = input.request();
 

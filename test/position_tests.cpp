@@ -37,3 +37,22 @@ TEST(Position, cwi)
                          count.get_cwi(factors.row(ii).t(), 0, ii));
     }
 }
+
+TEST(Position, loss)
+{
+    idl::Position count(900, 1000, 5, 1, 3, 123456789);
+    
+    count.set_PD(std::make_shared<idl::PD>(idl::PD(0.2)));
+
+    arma::mat factors({0, 1});
+
+    double cwi = count.get_cwi(factors.row(0).t(), 0, 0);
+
+    std::cout << "cwi: " << cwi << std::endl;
+
+    arma::vec loss = count.loss(factors.t(), 0, {1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}, 12);
+
+    loss.print();
+
+    std::cout << "fin" << std::endl;
+}

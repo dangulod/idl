@@ -46,7 +46,7 @@ namespace idl
         return output->second;
     }
     
-    PD IDLParams::get_default_probability(std::string value, unsigned int rating)
+    std::shared_ptr<PD> IDLParams::get_default_probability(std::string value, unsigned int rating)
     {
         auto output = this->m_ratings.find(value);
 

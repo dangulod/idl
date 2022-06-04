@@ -20,7 +20,7 @@ namespace idl
         std::vector<std::shared_ptr<Hedge>> m_hedges;
 
         // Set when added to a portfolio
-        PD m_pd;
+        std::shared_ptr<PD> m_pd;
         std::shared_ptr<Recovery> m_recovery;
         std::shared_ptr<Weights> m_weights;
 
@@ -50,8 +50,8 @@ namespace idl
 
         std::vector<std::shared_ptr<Hedge>> get_hedges() const;
 
-        PD get_PD() const;
-        void set_PD(const PD value);
+        std::shared_ptr<PD> get_PD() const;
+        void set_PD(const std::shared_ptr<PD> value);
 
         std::shared_ptr<Recovery> get_recovery() const;
         void set_recovery(const std::shared_ptr<Recovery> value);
@@ -63,6 +63,12 @@ namespace idl
         double get_cwi(arma::vec factors,
                        size_t idio_id,
                        size_t replenishment);
+
+        arma::vec loss(arma::mat factors,
+                       size_t idio_id,
+                       std::vector<double> times,
+                       double liquidity_horizon,
+                       bool hedge = true);
 
         double loss(arma::mat factors,
                     size_t idio_id,

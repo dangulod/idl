@@ -5,7 +5,7 @@
 
 namespace idl
 {
-    class PD
+    class PD: public std::enable_shared_from_this<PD>
     {
     private:
         double m_pd, m_n_inv_pd;

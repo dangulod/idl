@@ -28,7 +28,7 @@ namespace idl
         std::map<std::string, std::shared_ptr<Recovery>> get_recoveries() const;
 
         std::shared_ptr<Recovery> get_recovery(std::string value);
-        PD get_default_probability(std::string value, unsigned int rating);
+        std::shared_ptr<PD> get_default_probability(std::string value, unsigned int rating);
 
         pt::ptree to_ptree();
         static IDLParams from_ptree(const pt::ptree & value);

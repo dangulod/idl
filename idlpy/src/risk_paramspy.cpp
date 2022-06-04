@@ -9,7 +9,7 @@ namespace py = pybind11;
 std::string double_to_string(double value);
 
 void ex_risk_params(py::module_ &m) {
-    py::class_<idl::PD>(m, "PD")
+    py::class_<idl::PD, std::shared_ptr<idl::PD>>(m, "PD")
         .def(py::init<double>())
         .def("__repr__", [](const idl::PD & object)
         {
@@ -69,7 +69,9 @@ void ex_risk_params(py::module_ &m) {
         .def(py::init<>())
         .def("size", &idl::RatingPD::size)
         .def("__len__", &idl::RatingPD::size)
-        .def("add", &idl::RatingPD::add)
+        .def("add", py::overload_cast<unsigned int, 
+             std::shared_ptr<idl::PD>>(&idl::RatingPD::add),
+             py::arg("rating"), py::arg("default_probability"))
         .def("__getitem__", [](idl::RatingPD & object,  unsigned int index)
         {
             return object[index];

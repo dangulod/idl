@@ -92,5 +92,30 @@ void ex_position(py::module_ &m) {
 
             return out.str();
         })
+        .def("set_PD", &idl::Position::set_PD,
+             py::arg("value"))
+        .def("set_recovery", &idl::Position::set_recovery,
+             py::arg("value"))
+        .def("total_loss", [](idl::Position & object,
+                              py::array_t<double, py::array::c_style | py::array::forcecast> factors,
+                              size_t idio_id,
+                              py::array_t<double, py::array::c_style | py::array::forcecast> times,
+                              double liquidity_horizon,
+                              bool hedge)
+        {   
+            std::vector<double> array_vec(factors.size());
+            std::memcpy(array_vec.data(), factors.data(), factors.size() * sizeof(double));
+
+            auto dim = factors.shape();
+
+            arma::mat arma_factors(array_vec);
+            arma_factors.reshape(dim[0], factors.ndim() > 1 ? dim[1] : 1);
+            
+            std::vector<double> array_time(times.size());
+            std::memcpy(array_time.data(), times.data(), times.size() * sizeof(double));
+
+            return object.loss(arma_factors.t(), idio_id, array_time, liquidity_horizon, hedge);
+        }, py::arg("factors"), py::arg("idio_id"), py::arg("times"), 
+           py::arg("liquidity_horizon"),  py::arg("hedge") = true)
         ;
 }
