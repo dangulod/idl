@@ -76,3 +76,11 @@ class TestPosition(unittest.TestCase):
 
         self.assertEqual(notional, 3000)
         self.assertEqual(jtd, 1800)
+
+    def test_add_hedges(self):
+        count = idlpy.positions.Position(900, 1000, 5, 1, 3, 123456789);
+        pd = idlpy.PD(0.2)
+        count.set_PD(pd)
+        count.set_recovery(idlpy.Recovery(0.5))
+        count += idlpy.positions.Bond(-90, -100, 1)
+        count.jtd

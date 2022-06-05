@@ -48,7 +48,10 @@ void ex_position(py::module_ &m) {
         .def("__eq__", &idl::Position::operator==, py::arg("rhs"))
         .def("__add__", &idl::Position::operator+, py::arg("value"))
         .def("_add_hedge", &idl::Position::operator+, py::arg("value"))
-        .def("__iadd__", &idl::Position::operator+=, py::arg("value"))
+        .def("__iadd__", [](idl::Position & object, std::shared_ptr<idl::Hedge> &rhs)
+        {
+            return object + rhs;
+        }, py::arg("value"))
         .def_property_readonly("hedges", &idl::Position::get_hedges)
         .def_property_readonly("jtd", [](const idl::Position & object)
         {

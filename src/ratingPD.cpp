@@ -4,7 +4,25 @@ namespace idl
 {
     bool RatingPD::operator ==(const RatingPD &rhs) const
     {
-        return this->m_ratings == rhs.m_ratings;
+        auto it_this = this->begin();
+        auto it_rhs  = rhs.begin();
+
+        if (this->size() != rhs.size()) return false;
+
+        while (it_this != this->end())
+        {
+            if (*(it_this->second) != *(it_rhs->second)) return false;
+
+            it_this++;
+            it_rhs++;
+        }
+        
+        return true;
+    }
+
+    bool RatingPD::operator !=(const RatingPD &rhs) const
+    {
+        return !((*this) == rhs);
     }
 
     size_t RatingPD::size() const

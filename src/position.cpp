@@ -217,9 +217,26 @@ namespace idl
             if (cwi > (-this->get_PD()->get_normal_inverse_pd()))
             {
                 double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id,
-                                                                          replenishment);
+                                                                          this->m_hedges.size() * replenishment);
 
                 double loss = this->get_jtd() - this->get_notional() * recovery; // <- Meter en una funcion junto a los hedges
+
+                if (hedge)
+                {
+                    auto it_hedge = this->m_hedges.begin();
+                    size_t ii(1);
+
+                    while(it_hedge != this->m_hedges.end())
+                    {
+                        double recovery = this->get_recovery()->generate_recovery(this->get_idio_seed() + idio_id,
+                                                                                  ii + replenishment * this->m_hedges.size());
+
+                        loss += (*it_hedge)->get_jtd() - (*it_hedge)->get_notional() * recovery;
+
+                        it_hedge++;
+                        ii++;
+                    }
+                }
 
                 double default_time = (this->get_PD()->default_time(cwi) + 
                                       replenishment) * 
