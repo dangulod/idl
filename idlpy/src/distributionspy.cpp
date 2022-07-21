@@ -44,10 +44,10 @@ void ex_distributions(py::module_ &m) {
         {
             std::ostringstream out;
 
-            out << "LogNormal("                         <<
+            out << "LogNormal("                       <<
                     double_to_string(object.get_mu()) <<
-                    ", "                                <<
-                    double_to_string(object.get_sd())   <<
+                    ", "                              <<
+                    double_to_string(object.get_sd()) <<
                     ")";
 
             return out.str();
@@ -61,10 +61,10 @@ void ex_distributions(py::module_ &m) {
         {
             std::ostringstream out;
 
-            out << "Uniform(" <<
-                    double_to_string(object.get_lower());
-                    ", ";
-                    double_to_string(object.get_upper());
+            out << "Uniform("                            <<
+                    double_to_string(object.get_lower()) <<
+                    ", "                                 <<
+                    double_to_string(object.get_upper()) <<
                     ")";
 
             return out.str();
@@ -78,10 +78,10 @@ void ex_distributions(py::module_ &m) {
         {
             std::ostringstream out;
             
-            out << "Normal("                            <<
+            out << "Normal("                          <<
                     double_to_string(object.get_mu()) <<
-                    ", "                                <<
-                    double_to_string(object.get_sd())   <<
+                    ", "                              <<
+                    double_to_string(object.get_sd()) <<
                     ")";
 
             return out.str();

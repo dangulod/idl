@@ -287,16 +287,19 @@ namespace idl
         return cwi;
     }
     
-    arma::vec Portfolio::component_loss(arma::mat f, 
-                                        size_t idio_id, 
+    arma::mat Portfolio::component_loss(arma::mat f,
+                                        size_t idio_id,
+                                        std::vector<double> times,
+                                        double liquidity_horizon,
                                         bool diversification,
                                         bool hedge)
     {
-        arma::vec output(this->size());
-
+        arma::mat output(this->size(), times.size());
+        
         auto it_position = this->begin();
         auto it_output   = output.begin();
-        
+        auto it_row(0);
+
         while (it_position != this->end())
         {
             if (diversification)
@@ -306,11 +309,14 @@ namespace idl
                                                                    hedge);
             } else
             {
-                *it_output = it_position->second->loss(f,
-                                                       idio_id,
-                                                       hedge);
+                output.row(it_row) = it_position->second->loss(f,
+                                                               idio_id,
+                                                               times,
+                                                               liquidity_horizon,
+                                                               hedge).t();
             }
             
+            it_row++;
             it_position++;
             it_output++;
         }
@@ -318,9 +324,10 @@ namespace idl
         return output;
     }
 
-    arma::vec Portfolio::id_component_loss(arma::mat *r,
-                                           size_t n_replenishment,
+    arma::mat Portfolio::id_component_loss(size_t n_replenishment,
                                            size_t seed,
+                                           std::vector<double> times,
+                                           double liquidity_horizon,
                                            bool diversification,
                                            bool hedge,
                                            size_t id)
@@ -331,14 +338,18 @@ namespace idl
                                                         seed);
         return this->component_loss(f,
                                     id,
+                                    times,
+                                    liquidity_horizon,
                                     diversification,
                                     hedge);
     }
 
-    void Portfolio::v_component_loss(arma::mat *r,
+    void Portfolio::v_component_loss(arma::cube *r,
                                      size_t n,
                                      size_t n_replenishment,
                                      size_t seed,
+                                     std::vector<double> times,
+                                     double liquidity_horizon,
                                      bool diversification,
                                      bool hedge,
                                      size_t id,
@@ -346,20 +357,23 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = this->id_component_loss(r,
-                                                 n_replenishment,
+            r->row(id) = this->id_component_loss(n_replenishment,
                                                  seed,
+                                                 times,
+                                                 liquidity_horizon,
                                                  diversification,
                                                  hedge,
-                                                 id).t();
+                                                 id);
             id += n_threads;
         }
     }
 
-    void Portfolio::v_component_loss_scen(arma::mat *r, 
+    void Portfolio::v_component_loss_scen(arma::cube *r, 
                                           std::vector<size_t> scenarios_ids,
                                           size_t n_replenishment,
-                                          size_t seed, 
+                                          size_t seed,
+                                          std::vector<double> times,
+                                          double liquidity_horizon,
                                           bool diversification,
                                           bool hedge,
                                           size_t id,
@@ -367,24 +381,29 @@ namespace idl
     {
         while (id < scenarios_ids.size())
         {
-            r->row(id) = this->id_component_loss(r,
-                                                 n_replenishment,
+            r->row(id) = this->id_component_loss(n_replenishment,
                                                  seed,
+                                                 times,
+                                                 liquidity_horizon,
                                                  diversification,
                                                  hedge,
-                                                 scenarios_ids.at(id)).t();
+                                                 scenarios_ids.at(id));
             id += n_threads;
         }
     }
 
-    arma::mat Portfolio::component_loss(size_t n,
-                                        size_t n_replenishment,
-                                        size_t seed,
-                                        bool diversification,
-                                        bool hedge,
-                                        size_t n_threads)
+    arma::cube Portfolio::component_loss(size_t n,
+                                         size_t n_replenishment,
+                                         size_t seed,
+                                         std::vector<double> times,
+                                         double liquidity_horizon,
+                                         bool diversification,
+                                         bool hedge,
+                                         size_t n_threads)
     {
-        arma::mat loss = arma::zeros(n, this->size());
+        arma::cube loss = arma::zeros(n,
+                                      this->size(),
+                                      times.size());
 
         std::vector<std::thread> v_threads(n_threads);
 
@@ -396,6 +415,8 @@ namespace idl
                                                   n,
                                                   n_replenishment,
                                                   seed,
+                                                  times,
+                                                  liquidity_horizon,
                                                   diversification,
                                                   hedge,
                                                   it_thread,
@@ -410,15 +431,18 @@ namespace idl
         return loss;
     }
 
-    arma::mat Portfolio::component_loss(std::vector<size_t> scenarios_ids,
-                                        size_t n_replenishment,
-                                        size_t seed, 
-                                        bool diversification,
-                                        bool hedge, 
-                                        size_t n_threads)
+    arma::cube Portfolio::component_loss(std::vector<size_t> scenarios_ids,
+                                         size_t n_replenishment,
+                                         size_t seed,
+                                         std::vector<double> times,
+                                         double liquidity_horizon,
+                                         bool diversification,
+                                         bool hedge, 
+                                         size_t n_threads)
     {
-        arma::mat loss = arma::zeros(scenarios_ids.size(),
-                                     this->size());
+        arma::cube loss = arma::zeros(scenarios_ids.size(),
+                                      this->size(),
+                                      times.size());
 
         std::vector<std::thread> v_threads(n_threads);
 
@@ -430,6 +454,8 @@ namespace idl
                                                   scenarios_ids,
                                                   n_replenishment,
                                                   seed,
+                                                  times,
+                                                  liquidity_horizon,
                                                   diversification,
                                                   hedge,
                                                   it_thread,
@@ -444,27 +470,34 @@ namespace idl
         return loss;
     }
 
-    double Portfolio::id_total_loss(arma::mat *r,
-                                    size_t n_replenishment,
-                                    size_t seed,
-                                    bool diversification,
-                                    bool hedge,
-                                    size_t id)
+    arma::vec Portfolio::id_total_loss(size_t n_replenishment,
+                                       size_t seed,
+                                       std::vector<double> times,
+                                       double liquidity_horizon,
+                                       bool diversification,
+                                       bool hedge,
+                                       size_t id)
     {
         arma::mat f = static_distributions::dist_normal(generator::factors, 
                                                         n_replenishment,
                                                         this->get_number_of_factors(), 
                                                         seed);
-        return arma::accu(this->component_loss(f,
-                                               id,
-                                               diversification,
-                                               hedge));
+
+        return arma::sum(this->component_loss(f,
+                                              id,
+                                              times,
+                                              liquidity_horizon,
+                                              diversification,
+                                              hedge),
+                         0).t();
     }
     
     void Portfolio::v_total_loss(arma::mat *r,
                                  size_t n,
                                  size_t n_replenishment,
                                  size_t seed,
+                                 std::vector<double> times,
+                                 double liquidity_horizon,
                                  bool diversification,
                                  bool hedge,
                                  size_t id,
@@ -472,12 +505,13 @@ namespace idl
     {
         while (id < n)
         {
-            r->at(id) = this->id_total_loss(r,
-                                            n_replenishment,
-                                            seed,
-                                            diversification,
-                                            hedge,
-                                            id);
+            r->row(id) = this->id_total_loss(n_replenishment,
+                                             seed,
+                                             times,
+                                             liquidity_horizon,
+                                             diversification,
+                                             hedge,
+                                             id).t();
             id += n_threads;
         }
     }
@@ -486,6 +520,8 @@ namespace idl
                                       std::vector<size_t> scenarios_ids, 
                                       size_t n_replenishment,
                                       size_t seed,
+                                      std::vector<double> times,
+                                      double liquidity_horizon,
                                       bool diversification,
                                       bool hedge,
                                       size_t id,
@@ -493,24 +529,28 @@ namespace idl
     {
         while (id < scenarios_ids.size())
         {
-            r->at(id) = this->id_total_loss(r,
-                                            n_replenishment,
-                                            seed,
-                                            diversification,
-                                            hedge,
-                                            scenarios_ids.at(id));
+            r->row(id) = this->id_total_loss(n_replenishment,
+                                             seed,
+                                             times,
+                                             liquidity_horizon,
+                                             diversification,
+                                             hedge,
+                                             scenarios_ids.at(id)).t();
             id += n_threads;
         }
     }
 
-    arma::vec Portfolio::total_loss(size_t n,
+    arma::mat Portfolio::total_loss(size_t n,
                                     size_t n_replenishment,
                                     size_t seed,
+                                    std::vector<double> times,
+                                    double liquidity_horizon,
                                     bool diversification,
                                     bool hedge,
                                     size_t n_threads)
     {
-        arma::vec loss = arma::zeros(n);
+        arma::mat loss = arma::zeros(n,
+                                     times.size());
 
         std::vector<std::thread> v_threads(n_threads);
 
@@ -522,6 +562,8 @@ namespace idl
                                                   n,
                                                   n_replenishment,
                                                   seed,
+                                                  times,
+                                                  liquidity_horizon,
                                                   diversification,
                                                   hedge,
                                                   it_thread,
@@ -536,14 +578,17 @@ namespace idl
         return loss;
     }
 
-    arma::vec Portfolio::total_loss(std::vector<size_t> scenarios_ids,
+    arma::mat Portfolio::total_loss(std::vector<size_t> scenarios_ids,
                                     size_t n_replenishment,
                                     size_t seed,
+                                    std::vector<double> times,
+                                    double liquidity_horizon,
                                     bool diversification,
                                     bool hedge,
                                     size_t n_threads)
     {
-        arma::vec loss = arma::zeros(scenarios_ids.size());
+        arma::mat loss = arma::zeros(scenarios_ids.size(),
+                                     times.size());
 
         std::vector<std::thread> v_threads(n_threads);
 
@@ -555,6 +600,8 @@ namespace idl
                                                   scenarios_ids,
                                                   n_replenishment,
                                                   seed,
+                                                  times,
+                                                  liquidity_horizon,
                                                   diversification,
                                                   hedge,
                                                   it_thread,

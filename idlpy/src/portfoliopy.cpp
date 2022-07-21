@@ -56,17 +56,49 @@ void ex_portfolio(py::module_ &m) {
             py::arg("n_threads") = std::thread::hardware_concurrency())
         .def("get_CWIs", &idl::Portfolio::get_CWIs, 
             py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<size_t, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss), 
-            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+        .def("component_loss", py::overload_cast<size_t, size_t, size_t, std::vector<double>, double, bool, bool, size_t>
+            (&idl::Portfolio::component_loss), py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("times"),
+            py::arg("liquidity_horizon") = 12, py::arg("diversification") = 0, py::arg("hedge") = true,
             py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::component_loss),
-            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0,
+        .def("component_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, std::vector<double>, double, 
+            bool, bool, size_t>(&idl::Portfolio::component_loss),
+            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("times"),
+            py::arg("liquidity_horizon") = 12, py::arg("diversification") = 0,
             py::arg("hedge") = true, py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<size_t, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss), 
-            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0, py::arg("hedge") = true,
+        .def("total_loss", [](idl::Portfolio & object,
+                              size_t n,
+                              size_t n_replenishment,
+                              size_t seed,
+                              py::array_t<double, py::array::c_style | py::array::forcecast> times,
+                              double liquidity_horizon,
+                              bool diversification,
+                              bool hedge,
+                              size_t n_threads)
+        {
+            auto times_buffer = times.request();
+            unsigned int * uint__ptr = static_cast<unsigned int*>(times_buffer.ptr);
+
+            std::vector<double> times_vec(times.size());
+
+            // copy py::array -> std::vector
+            std::memcpy(times_vec.data(), times.data(), times_vec.size() * sizeof(double));
+
+            return object.total_loss(n,
+                                     n_replenishment,
+                                     seed,
+                                     times_vec,
+                                     liquidity_horizon,
+                                     diversification,
+                                     hedge,
+                                     n_threads);
+        },
+            py::arg("n"), py::arg("n_replenishment"), py::arg("seed"), py::arg("times"),
+            py::arg("liquidity_horizon") = 12, py::arg("diversification") = 0, py::arg("hedge") = true,
             py::arg("n_threads") = std::thread::hardware_concurrency())
-        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, bool, bool, size_t>(&idl::Portfolio::total_loss),
-            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("diversification") = 0,
+        .def("total_loss", py::overload_cast<std::vector<size_t>, size_t, size_t, std::vector<double>, double,
+            bool, bool, size_t>(&idl::Portfolio::total_loss),
+            py::arg("scenarios_ids"), py::arg("n_replenishment"), py::arg("seed"), py::arg("times"),
+            py::arg("liquidity_horizon") = 12, py::arg("diversification") = 0,
             py::arg("hedge") = true, py::arg("n_threads") = std::thread::hardware_concurrency())
         ;
 }
