@@ -249,9 +249,9 @@ namespace idl
     {
         while (id < n)
         {
-            r->slice(id) = this->getCWI(n_replenishment,
-                                        seed + id,
-                                        id).t();
+            r->row(id) = this->getCWI(n_replenishment,
+                                      seed + id,
+                                      id);
             id += n_threads;
         }
     }
@@ -261,9 +261,9 @@ namespace idl
                                    size_t seed,
                                    size_t n_threads)
     {
-        arma::cube cwi = arma::zeros(n_replenishment,
+        arma::cube cwi = arma::zeros(n,
                                      this->size(),
-                                     n);
+                                     n_replenishment);
 
         std::vector<std::thread> v_threads(n_threads);
 
