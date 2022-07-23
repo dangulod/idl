@@ -1,6 +1,8 @@
 #ifndef IDL_INCLUDES
 #define IDL_INCLUDES
 
+#define ARMA_NO_DEBUG
+
 #include <idl/factor/factor.h>
 #include <idl/risk_params/ratingPD.h>
 #include <idl/portfolio/portfolio.h>

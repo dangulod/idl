@@ -44,8 +44,8 @@ TEST(Portfolio, class)
         portfolio.add_position(std::to_string(ii), count);
     }
 
-    portfolio.get_scenarios(10, 2, 123456789).print();
-    portfolio.get_CWIs(10, 2, 123456789, 1).print();
+    portfolio.get_scenarios(10, 2, 123456789);
+    portfolio.get_CWIs(10, 2, 123456789, 1);
 
     EXPECT_EQ(portfolio.size(), 10);
 
@@ -53,5 +53,13 @@ TEST(Portfolio, class)
 
     idl::Portfolio p = idl::Portfolio::from_json("/tmp/portfolio.json");
 
-    p.component_loss(100, 2, 123456789, 0, 1, 1).print();
+    p.get_CWIs(100, 2, 123456789).print();
+
+    p.total_loss(100, 2, 123456789, {11 ,12}, 12, 0, 1, 1).print();
+    p.component_loss(100, 2, 123456789, {11, 12}, 12, 0, 1, 1).print();
+
+    p.total_loss({1, 99}, 2, 123456789, {11 ,12}, 12, 0, 1, 1).print();
+    p.component_loss({1, 99}, 2, 123456789, {11, 12}, 12, 0, 1, 1).print();
+
+    std::cout << "Finishes" << std::endl;
 }
