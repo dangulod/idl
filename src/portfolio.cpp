@@ -287,14 +287,14 @@ namespace idl
         return cwi;
     }
     
-    arma::mat Portfolio::component_loss(arma::mat f,
+    arma::sp_mat Portfolio::component_loss(arma::mat f,
                                         size_t idio_id,
                                         std::vector<double> times,
                                         double liquidity_horizon,
                                         bool diversification,
                                         bool hedge)
     {
-        arma::mat output(this->size(), times.size());
+        arma::sp_mat output(this->size(), times.size());
         
         auto it_position = this->begin();
         auto it_output   = output.begin();
@@ -309,7 +309,7 @@ namespace idl
                                                                    hedge);
             } else
             {
-                output.row(it_row) = it_position->second->loss(f,
+                output.row(it_row) += it_position->second->loss(f,
                                                                idio_id,
                                                                times,
                                                                liquidity_horizon,
@@ -318,13 +318,12 @@ namespace idl
             
             it_row++;
             it_position++;
-            it_output++;
         }
 
         return output;
     }
 
-    arma::mat Portfolio::id_component_loss(size_t n_replenishment,
+    arma::sp_mat Portfolio::id_component_loss(size_t n_replenishment,
                                            size_t seed,
                                            std::vector<double> times,
                                            double liquidity_horizon,
@@ -357,13 +356,13 @@ namespace idl
     {
         while (id < n)
         {
-            r->row(id) = this->id_component_loss(n_replenishment,
+            r->row(id) = arma::mat(this->id_component_loss(n_replenishment,
                                                  seed,
                                                  times,
                                                  liquidity_horizon,
                                                  diversification,
                                                  hedge,
-                                                 id);
+                                                 id));
             id += n_threads;
         }
     }
@@ -381,13 +380,13 @@ namespace idl
     {
         while (id < scenarios_ids.size())
         {
-            r->row(id) = this->id_component_loss(n_replenishment,
+            r->row(id) = arma::mat(this->id_component_loss(n_replenishment,
                                                  seed,
                                                  times,
                                                  liquidity_horizon,
                                                  diversification,
                                                  hedge,
-                                                 scenarios_ids.at(id));
+                                                 scenarios_ids.at(id)));
             id += n_threads;
         }
     }
@@ -483,13 +482,13 @@ namespace idl
                                                         this->get_number_of_factors(), 
                                                         seed);
 
-        return arma::sum(this->component_loss(f,
+        return arma::vec(arma::sum(this->component_loss(f,
                                               id,
                                               times,
                                               liquidity_horizon,
                                               diversification,
                                               hedge),
-                         0).t();
+                         0));
     }
     
     void Portfolio::v_total_loss(arma::mat *r,

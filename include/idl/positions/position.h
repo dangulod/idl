@@ -64,7 +64,7 @@ namespace idl
                        size_t idio_id,
                        size_t replenishment);
 
-        arma::vec loss(arma::mat factors,
+        arma::sp_vec loss(arma::mat factors,
                        size_t idio_id,
                        std::vector<double> times,
                        double liquidity_horizon,

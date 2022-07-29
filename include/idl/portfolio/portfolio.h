@@ -68,7 +68,7 @@ namespace idl
                                bool hedge,
                                size_t id,
                                size_t n_threads);
-        arma::mat id_component_loss(size_t n_replenishment,
+        arma::sp_mat id_component_loss(size_t n_replenishment,
                                     size_t seed,
                                     std::vector<double> times,
                                     double liquidity_horizon,
@@ -133,7 +133,7 @@ namespace idl
                             size_t seed,
                             size_t n_threads = std::thread::hardware_concurrency());
 
-        arma::mat component_loss(arma::mat f,
+        arma::sp_mat component_loss(arma::mat f,
                                   size_t idio_id,
                                   std::vector<double> times,
                                   double liquidity_horizon,

@@ -197,18 +197,16 @@ namespace idl
                                                         this->get_idio_seed() + idio_id));
     }
 
-    arma::vec Position::loss(arma::mat factors,
-                             size_t idio_id,
-                             std::vector<double> times,
-                             double liquidity_horizon,
-                             bool hedge)
+    arma::sp_vec Position::loss(arma::mat factors,
+                                size_t idio_id,
+                                std::vector<double> times,
+                                double liquidity_horizon,
+                                bool hedge)
     {
         size_t number_of_replenishment(factors.n_rows);
-        arma::vec time_loss(times.size(), arma::fill::zeros);
+        arma::sp_vec time_loss(times.size());
 
-        for (size_t replenishment = 0;
-             replenishment < number_of_replenishment;
-             replenishment++)
+        for (size_t replenishment = 0; replenishment < factors.n_rows; replenishment++)
         {
             double cwi = this->get_cwi(factors.row(replenishment).t(), 
                                        idio_id,
@@ -239,23 +237,17 @@ namespace idl
                 }
 
                 double default_time = (this->get_PD()->default_time(cwi) + 
-                                      replenishment) * 
-                                      liquidity_horizon;
+                                       replenishment) * 
+                                       liquidity_horizon;
 
-                auto it_loss = time_loss.begin();
-                auto it_time = times.begin();
-
-                while (it_time != times.end())
+                for (size_t it_time = 0; it_time < times.size(); it_time++)
                 {
-                    if (default_time < (*it_time))
+                    if (default_time < times.at(it_time))
                     {
-                        (*it_loss) = loss;
+                        time_loss.at(it_time) = loss;
                     }
-                    
-                    it_loss++;
-                    it_time++;
                 }
-                
+
                 return time_loss;
             }
         }
